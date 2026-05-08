@@ -1,17 +1,16 @@
-# AI Pulse
+# ForensicFeed
 
-> Personal AI news aggregator — mobile-first feed across 14 buckets.
+> Personal research paper tracker for image forgery detection & localization.
+> Aggregates open-access papers from arXiv, Hugging Face Papers, Semantic Scholar, CVF, and OpenReview — tagged, scored by relevance, filterable by venue/year/topic.
+>
 > See `../CLAUDE.md` for the engineering playbook and `../Plan.md` for the task plan.
 
 ## Quick start
 
 ```bash
-# From the repo root, activate the isolated tooling env
-source ../virtual_env/activate
-
 cd app
 
-# Install dependencies (uses pnpm-store inside ../virtual_env/)
+# Install dependencies
 pnpm install
 
 # Copy env template and fill in real values
