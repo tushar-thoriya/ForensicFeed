@@ -1,0 +1,101 @@
+{
+  "notes": [
+    {
+      "id": "abc1iclr2025",
+      "forum": "abc1iclr2025",
+      "domain": "ICLR.cc/2025/Conference",
+      "cdate": 1727740800000,
+      "pdate": 1727740800000,
+      "content": {
+        "title": { "value": "Detecting Diffusion-Generated Deepfakes via Frequency Analysis" },
+        "authors": { "value": ["Alice Liu", "Bob Wong", "Carol Chen"] },
+        "abstract": {
+          "value": "We propose a deepfake detection method that exploits frequency-domain artifacts inherent to diffusion models. Code: https://github.com/example/freq-deepfake."
+        },
+        "pdf": { "value": "/pdf/abc1iclr2025paper.pdf" },
+        "venue": { "value": "ICLR 2025 Conference" },
+        "venueid": { "value": "ICLR.cc/2025/Conference" },
+        "keywords": { "value": ["deepfake detection", "frequency analysis", "diffusion"] }
+      }
+    },
+    {
+      "id": "def2iclr2025",
+      "forum": "def2iclr2025",
+      "domain": "ICLR.cc/2025/Conference",
+      "cdate": 1728000000000,
+      "pdate": 1728000000000,
+      "content": {
+        "title": { "value": "Image Forgery Localization with Self-Supervised Pretraining" },
+        "authors": { "value": ["Dana Park", "Eli Davis"] },
+        "abstract": {
+          "value": "We address image manipulation localization using self-supervised pretraining on large unlabeled corpora."
+        },
+        "pdf": { "value": "/pdf/def2iclr2025paper.pdf" },
+        "venue": { "value": "ICLR 2025 Conference" },
+        "venueid": { "value": "ICLR.cc/2025/Conference" }
+      }
+    },
+    {
+      "id": "ghi3withdrawn",
+      "forum": "ghi3withdrawn",
+      "domain": "ICLR.cc/2026/Conference",
+      "cdate": 1756732207982,
+      "pdate": 1756732207982,
+      "content": {
+        "title": { "value": "Scaling Laws for Deepfake Detection (Withdrawn)" },
+        "authors": { "value": ["Wenhao Wang"] },
+        "abstract": { "value": "Withdrawn paper on scaling laws." },
+        "pdf": { "value": "/pdf/ghi3withdrawn.pdf" },
+        "venue": { "value": "ICLR 2026 Conference Withdrawn Submission" },
+        "venueid": { "value": "ICLR.cc/2026/Conference/Withdrawn_Submission" }
+      }
+    },
+    {
+      "id": "jkl4neurips2024",
+      "forum": "jkl4neurips2024",
+      "domain": "NeurIPS.cc/2024/Conference",
+      "cdate": 1717200000000,
+      "pdate": 1717200000000,
+      "content": {
+        "title": { "value": "Robust Splicing Detection for High-Resolution Documents" },
+        "authors": { "value": ["Priya Mehta", "Jin Park"] },
+        "abstract": {
+          "value": "We propose a splicing detection pipeline robust to common post-processing operations."
+        },
+        "pdf": { "value": "/pdf/jkl4neurips2024paper.pdf" },
+        "venue": { "value": "NeurIPS 2024 Conference" },
+        "venueid": { "value": "NeurIPS.cc/2024/Conference" }
+      }
+    },
+    {
+      "id": "mno5archive",
+      "forum": "mno5archive",
+      "domain": "OpenReview.net/Archive",
+      "cdate": 1769505887237,
+      "pdate": 1761494400000,
+      "content": {
+        "title": { "value": "Deepfake Benchmark for Multimodal Models" },
+        "authors": { "value": ["Jiarui Wang"] },
+        "abstract": { "value": "An archive paper, not a venue submission." },
+        "pdf": { "value": "/pdf/mno5archive.pdf" },
+        "venue": { "value": "Archive" },
+        "venueid": { "value": "OpenReview.net/Archive" }
+      }
+    },
+    {
+      "id": "pqr6noabstract",
+      "forum": "pqr6noabstract",
+      "domain": "ICLR.cc/2025/Conference",
+      "cdate": 1727900000000,
+      "pdate": 1727900000000,
+      "content": {
+        "title": { "value": "Tampering Detection without Abstract" },
+        "authors": { "value": ["Author Without Abstract"] },
+        "pdf": { "value": "/pdf/pqr6noabstract.pdf" },
+        "venue": { "value": "ICLR 2025 Conference" },
+        "venueid": { "value": "ICLR.cc/2025/Conference" }
+      }
+    }
+  ],
+  "count": 6
+}

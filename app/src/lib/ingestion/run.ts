@@ -6,6 +6,7 @@ export interface RunAdapterOptions {
   since: Date
   now?: Date
   maxResults?: number
+  venues?: string[]
 }
 
 export async function runAdapter(
@@ -27,6 +28,7 @@ export async function runAdapter(
       since: options.since,
       now,
       ...(options.maxResults !== undefined ? { maxResults: options.maxResults } : {}),
+      ...(options.venues !== undefined ? { venues: options.venues } : {}),
     }
     const results = await adapter.fetch(fetchOptions)
     papersFetched = results.length

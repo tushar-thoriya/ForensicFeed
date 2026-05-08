@@ -149,6 +149,9 @@
 .tag-badge-venue {
   background: var(--color-accent-soft);
   color: var(--color-accent-strong);
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .tag-badge-code {

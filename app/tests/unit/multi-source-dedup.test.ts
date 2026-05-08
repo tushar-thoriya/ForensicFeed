@@ -155,6 +155,23 @@ function semanticScholarPaper(): NormalisedPaper {
   }
 }
 
+// Conference papers often arrive via CVF/OR scraping with no arXiv link, so
+// the dedup code path must collapse them onto an existing arXiv row via
+// title-hash. arxivId is intentionally null here.
+function cvfPaper(): NormalisedPaper {
+  return {
+    ...arxivPaper(),
+    arxivId: null,
+    venue: 'CVPR 2026',
+    venueType: 'conference',
+    pdfUrl: 'https://openaccess.thecvf.com/content/CVPR2026/papers/copy_move.pdf',
+    codeUrl: null,
+    citationCount: null,
+    primarySource: 'cvf',
+    rawMetadata: { source: 'cvf', venueCode: 'CVPR2026' },
+  }
+}
+
 describe('multi-source dedup', () => {
   beforeEach(() => {
     store.rows = []
@@ -201,5 +218,26 @@ describe('multi-source dedup', () => {
     const beforeAbstract = store.rows[0]?.abstract
     await upsertPaper({ ...semanticScholarPaper(), abstract: null })
     expect(store.rows[0]?.abstract).toBe(beforeAbstract)
+  })
+
+  it('merges a CVF conference paper into an existing arXiv row via title-hash', async () => {
+    await upsertPaper(arxivPaper())
+    await upsertPaper(huggingfacePaper())
+    await upsertPaper(semanticScholarPaper())
+    const cvfResult = await upsertPaper(cvfPaper())
+
+    expect(cvfResult.inserted).toBe(false)
+    expect(store.rows).toHaveLength(1)
+
+    const row = store.rows[0]
+    // The original arxiv-derived id is preserved.
+    expect(row?.id).toBe('arxiv:2604.12345')
+    expect(row?.arxivId).toBe('2604.12345')
+    // The earlier-set codeUrl from HF survives.
+    expect(row?.codeUrl).toBe('https://github.com/example/forgery-loc')
+    // S2 citation count survives.
+    expect(row?.citationCount).toBe(42)
+    // primarySource never gets overwritten by later enrichments.
+    expect(row?.primarySource).toBe('arxiv')
   })
 })

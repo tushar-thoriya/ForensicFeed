@@ -18,10 +18,17 @@ function formatDate(value: Date): string {
   }).format(value)
 }
 
+const VENUE_TYPE_LABEL: Record<string, string> = {
+  arxiv: 'arXiv',
+  conference: 'Conference',
+  workshop: 'Workshop',
+  journal: 'Journal',
+  preprint: 'Preprint',
+}
+
 function venueLabel(paper: Paper): string {
   if (paper.venue && paper.venue !== 'arXiv') return paper.venue
-  if (paper.venueType === 'arxiv') return 'arXiv'
-  return paper.venueType
+  return VENUE_TYPE_LABEL[paper.venueType] ?? paper.venueType
 }
 
 function formatRelevance(score: number): string {

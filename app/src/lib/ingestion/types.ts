@@ -5,6 +5,10 @@ export interface AdapterFetchOptions {
   now: Date
   apiKey?: string | null
   maxResults?: number
+  // Per-source venue/group selectors. CVF uses codes like 'CVPR2024';
+  // OpenReview uses group paths like 'ICLR.cc/2025/Conference'. Adapters
+  // that don't recognise the field ignore it.
+  venues?: string[]
 }
 
 export interface Adapter {
