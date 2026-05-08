@@ -1,0 +1,190 @@
+.feed-shell {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-md) var(--space-2xl);
+}
+
+.feed-header {
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.feed-title {
+  font-family: var(--font-serif);
+  font-size: var(--text-hero);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-sm);
+}
+
+.feed-subtitle {
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  max-width: 58ch;
+  margin: 0 0 var(--space-md);
+  line-height: 1.55;
+}
+
+.feed-meta {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.feed-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-list > li {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.feed-list > li:last-child {
+  border-bottom: none;
+}
+
+.paper-card {
+  display: block;
+  position: relative;
+  padding: var(--space-lg) 0;
+}
+
+.paper-card:hover .paper-card-title-link,
+.paper-card:focus-within .paper-card-title-link {
+  color: var(--color-accent);
+}
+
+.paper-card-meta {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: baseline;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-sm);
+}
+
+.paper-card-meta-dot::before {
+  content: '·';
+  margin-right: var(--space-sm);
+  color: var(--color-border);
+}
+
+.paper-card-score {
+  color: var(--color-accent-strong);
+}
+
+.paper-card-title {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--space-sm);
+}
+
+.paper-card-title-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out-expo);
+}
+
+.paper-card-title-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.paper-card-title-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.paper-card-authors {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-sm);
+}
+
+.paper-card-abstract {
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  margin: 0 0 var(--space-md);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.paper-card-footer {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-tag-bg);
+  color: var(--color-tag-text);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
+}
+
+.tag-badge-venue {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+.tag-badge-code {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  gap: var(--space-xs);
+  background: var(--color-surface-muted);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  border: 1px solid var(--color-border);
+  transition:
+    background var(--duration-fast) var(--ease-out-expo),
+    border-color var(--duration-fast) var(--ease-out-expo);
+}
+
+.tag-badge-code:hover,
+.tag-badge-code:focus-visible {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent-strong);
+}
+
+.tag-badge-code:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.empty-state {
+  padding: var(--space-2xl) var(--space-md);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+@media (min-width: 1024px) {
+  .feed-shell {
+    padding-inline: var(--space-xl);
+  }
+}

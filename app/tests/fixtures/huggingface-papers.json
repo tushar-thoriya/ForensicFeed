@@ -1,0 +1,104 @@
+[
+  {
+    "paper": {
+      "id": "2604.01234",
+      "authors": [
+        {
+          "name": "Zhenglin Huang"
+        },
+        {
+          "name": "Tianxiao Li"
+        },
+        {
+          "name": "Xiangtai Li"
+        }
+      ],
+      "publishedAt": "2026-04-15T00:00:00.000Z",
+      "title": "So-Fake: Benchmarking and Explaining Social Media Image Forgery\n  Detection",
+      "summary": "Recent advances in AI-powered generative models have enabled the creation of\nincreasingly realistic synthetic images, posing significant risks to\ninformation integrity and public trust on social media platforms. While robust\ndetection frameworks and diverse, large-scale datasets are essential to\nmitigate these risks, existing academic efforts remain limited in scope:\ncurrent datasets lack the diversity, scale, and realism required for social\nmedia contexts, while detection methods struggle with generalization to unseen\ngenerative technologies. To bridge this gap, we introduce So-Fake-Set, a\ncomprehensive social media-oriented dataset with over 2 million high-quality\nimages, diverse generative sources, and photorealistic imagery synthesized\nusing 35 state-of-the-art generative models. To rigorously evaluate\ncross-domain robustness, we establish a novel and large-scale (100K)\nout-of-domain benchmark (So-Fake-OOD) featuring synthetic imagery from\ncommercial models explicitly excluded from the training distribution, creating\na realistic testbed for evaluating real-world performance. Leveraging these\nresources, we present So-Fake-R1, an advanced vision-language framework that\nemploys reinforcement learning for highly accurate forgery detection, precise\nlocalization, and explainable inference through interpretable visual\nrationales. Extensive experiments show that So-Fake-R1 outperforms the\nsecond-best method, with a 1.3% gain in detection accuracy and a 4.5% increase\nin localization IoU. By integrating a scalable dataset, a challenging OOD\nbenchmark, and an advanced detection framework, this work establishes a new\nfoundation for social media-centric forgery detection research. The code,\nmodels, and datasets will be released publicly. Code is available at https://github.com/example/forgery-detect.",
+      "upvotes": 2,
+      "discussionId": "683575c0b524d75f61051c98",
+      "ai_keywords": [
+        "generative models",
+        "So-Fake-Set",
+        "So-Fake-OOD",
+        "So-Fake-R1",
+        "reinforcement learning",
+        "forgery detection",
+        "localisation IoU"
+      ]
+    },
+    "publishedAt": "2026-04-15T00:00:00.000Z",
+    "title": "So-Fake: Benchmarking and Explaining Social Media Image Forgery\n  Detection",
+    "summary": "Recent advances in AI-powered generative models have enabled the creation of\nincreasingly realistic synthetic images, posing significant risks to\ninformation integrity and public trust on social media platforms. While robust\ndetection frameworks and diverse, large-scale datasets are essential to\nmitigate these risks, existing academic efforts remain limited in scope:\ncurrent datasets lack the diversity, scale, and realism required for social\nmedia contexts, while detection methods struggle with generalization to unseen\ngenerative technologies. To bridge this gap, we introduce So-Fake-Set, a\ncomprehensive social media-oriented dataset with over 2 million high-quality\nimages, diverse generative sources, and photorealistic imagery synthesized\nusing 35 state-of-the-art generative models. To rigorously evaluate\ncross-domain robustness, we establish a novel and large-scale (100K)\nout-of-domain benchmark (So-Fake-OOD) featuring synthetic imagery from\ncommercial models explicitly excluded from the training distribution, creating\na realistic testbed for evaluating real-world performance. Leveraging these\nresources, we present So-Fake-R1, an advanced vision-language framework that\nemploys reinforcement learning for highly accurate forgery detection, precise\nlocalization, and explainable inference through interpretable visual\nrationales. Extensive experiments show that So-Fake-R1 outperforms the\nsecond-best method, with a 1.3% gain in detection accuracy and a 4.5% increase\nin localization IoU. By integrating a scalable dataset, a challenging OOD\nbenchmark, and an advanced detection framework, this work establishes a new\nfoundation for social media-centric forgery detection research. The code,\nmodels, and datasets will be released publicly.",
+    "numComments": 0,
+    "upvoted": false,
+    "isAuthorParticipating": false
+  },
+  {
+    "paper": {
+      "id": "2604.05678",
+      "authors": [
+        {
+          "name": "Zhipei Xu"
+        },
+        {
+          "name": "Xuanyu Zhang"
+        },
+        {
+          "name": "Runyi Li"
+        }
+      ],
+      "publishedAt": "2026-04-10T00:00:00.000Z",
+      "title": "FakeShield: Explainable Image Forgery Detection and Localization via\n  Multi-modal Large Language Models",
+      "summary": "The rapid development of generative AI is a double-edged sword, which not\nonly facilitates content creation but also makes image manipulation easier and\nmore difficult to detect. Although current image forgery detection and\nlocalization (IFDL) methods are generally effective, they tend to face two\nchallenges: 1) black-box nature with unknown detection principle,\n2) limited generalization across diverse tampering methods (e.g.,\nPhotoshop, DeepFake, AIGC-Editing). To address these issues, we propose the\nexplainable IFDL task and design FakeShield, a multi-modal framework capable of\nevaluating image authenticity, generating tampered region masks, and providing\na judgment basis based on pixel-level and image-level tampering clues.\nAdditionally, we leverage GPT-4o to enhance existing IFDL datasets, creating\nthe Multi-Modal Tamper Description dataSet (MMTD-Set) for training FakeShield's\ntampering analysis capabilities. Meanwhile, we incorporate a Domain Tag-guided\nExplainable Forgery Detection Module (DTE-FDM) and a Multi-modal Forgery\nLocalization Module (MFLM) to address various types of tamper detection\ninterpretation and achieve forgery localization guided by detailed textual\ndescriptions. Extensive experiments demonstrate that FakeShield effectively\ndetects and localizes various tampering techniques, offering an explainable and\nsuperior solution compared to previous IFDL methods.",
+      "upvotes": 2,
+      "discussionId": "67c192c35cca9a8bbdf1d7d3",
+      "ai_keywords": [
+        "explainable IFDL",
+        "FakeShield",
+        "multi-modal framework",
+        "pixel-level",
+        "image-level",
+        "tampering clues",
+        "MMTD-Set",
+        "Domain Tag-guided Explainable Forgery Detection Module",
+        "Multi-modal Forgery Localization Module"
+      ]
+    },
+    "publishedAt": "2026-04-10T00:00:00.000Z",
+    "title": "FakeShield: Explainable Image Forgery Detection and Localization via\n  Multi-modal Large Language Models",
+    "summary": "The rapid development of generative AI is a double-edged sword, which not\nonly facilitates content creation but also makes image manipulation easier and\nmore difficult to detect. Although current image forgery detection and\nlocalization (IFDL) methods are generally effective, they tend to face two\nchallenges: 1) black-box nature with unknown detection principle,\n2) limited generalization across diverse tampering methods (e.g.,\nPhotoshop, DeepFake, AIGC-Editing). To address these issues, we propose the\nexplainable IFDL task and design FakeShield, a multi-modal framework capable of\nevaluating image authenticity, generating tampered region masks, and providing\na judgment basis based on pixel-level and image-level tampering clues.\nAdditionally, we leverage GPT-4o to enhance existing IFDL datasets, creating\nthe Multi-Modal Tamper Description dataSet (MMTD-Set) for training FakeShield's\ntampering analysis capabilities. Meanwhile, we incorporate a Domain Tag-guided\nExplainable Forgery Detection Module (DTE-FDM) and a Multi-modal Forgery\nLocalization Module (MFLM) to address various types of tamper detection\ninterpretation and achieve forgery localization guided by detailed textual\ndescriptions. Extensive experiments demonstrate that FakeShield effectively\ndetects and localizes various tampering techniques, offering an explainable and\nsuperior solution compared to previous IFDL methods.",
+    "numComments": 0,
+    "upvoted": false,
+    "isAuthorParticipating": false
+  },
+  {
+    "paper": {
+      "id": "2603.99999",
+      "authors": [
+        {
+          "name": "Shaofeng Guo"
+        },
+        {
+          "name": "Jiequan Cui"
+        },
+        {
+          "name": "Richang Hong"
+        }
+      ],
+      "publishedAt": "2026-03-01T00:00:00.000Z",
+      "title": "Rethinking VLMs for Image Forgery Detection and Localization",
+      "summary": "With the rapid rise of Artificial Intelligence Generated Content (AIGC), image manipulation has become increasingly accessible, posing significant challenges for image forgery detection and localization (IFDL). In this paper, we study how to fully leverage vision-language models (VLMs) to assist the IFDL task. In particular, we observe that priors from VLMs hardly benefit the detection and localization performance and even have negative effects due to their inherent biases toward semantic plausibility rather than authenticity. Additionally, the location masks explicitly encode the forgery concepts, which can serve as extra priors for VLMs to ease their training optimization, thus enhancing the interpretability of detection and localization results. Building on these findings, we propose a new IFDL pipeline named IFDL-VLM. To demonstrate the effectiveness of our method, we conduct experiments on 9 popular benchmarks and assess the model performance under both in-domain and cross-dataset generalization settings. The experimental results show that we consistently achieve new state-of-the-art performance in detection, localization, and interpretability.Code is available at: https://github.com/sha0fengGuo/IFDL-VLM.",
+      "upvotes": 0,
+      "discussionId": "69b8bbee6b3f36c249fbc3b6",
+      "ai_keywords": []
+    },
+    "publishedAt": "2026-03-01T00:00:00.000Z",
+    "title": "Rethinking VLMs for Image Forgery Detection and Localization",
+    "summary": "With the rapid rise of Artificial Intelligence Generated Content (AIGC), image manipulation has become increasingly accessible, posing significant challenges for image forgery detection and localization (IFDL). In this paper, we study how to fully leverage vision-language models (VLMs) to assist the IFDL task. In particular, we observe that priors from VLMs hardly benefit the detection and localization performance and even have negative effects due to their inherent biases toward semantic plausibility rather than authenticity. Additionally, the location masks explicitly encode the forgery concepts, which can serve as extra priors for VLMs to ease their training optimization, thus enhancing the interpretability of detection and localization results. Building on these findings, we propose a new IFDL pipeline named IFDL-VLM. To demonstrate the effectiveness of our method, we conduct experiments on 9 popular benchmarks and assess the model performance under both in-domain and cross-dataset generalization settings. The experimental results show that we consistently achieve new state-of-the-art performance in detection, localization, and interpretability.Code is available at: https://github.com/sha0fengGuo/IFDL-VLM.",
+    "numComments": 0,
+    "upvoted": false,
+    "isAuthorParticipating": false
+  }
+]

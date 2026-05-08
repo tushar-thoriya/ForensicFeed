@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(source virtual_env/activate)",
+      "Bash(pnpm:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(rm:*)"
+    ]
+  },
+  "env": {
+    "PATH": "${workspaceFolder}/virtual_env/node_modules/.bin:${env:PATH}",
+    "PNPM_HOME": "${workspaceFolder}/virtual_env/bin",
+    "PNPM_STORE_DIR": "${workspaceFolder}/virtual_env/pnpm-store",
+    "npm_config_cache": "${workspaceFolder}/virtual_env/cache"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const c=i.tool_input?.content||'';const lines=c.split('\\n').length;if(lines>800){console.error('[Hook] BLOCKED: File exceeds 800 lines ('+lines+' lines). Split into smaller modules.');process.exit(2)}console.log(d)}catch(e){console.log(d)}})\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).file_path||'')}catch(e){}}\"); if [ -n \"$FILE\" ] && [[ \"$FILE\" == */app/* ]] && [[ \"$FILE\" =~ \\.(ts|tsx|js|jsx|css|md|json)$ ]]; then cd \"$(dirname \"$FILE\")\" && cd \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/app\" 2>/dev/null && [ -f package.json ] && ./node_modules/.bin/prettier --write \"$FILE\" 2>&1 | tail -3 || true; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).file_path||'')}catch(e){}}\"); if [ -n \"$FILE\" ] && [[ \"$FILE\" == */app/* ]] && [[ \"$FILE\" =~ \\.(ts|tsx)$ ]]; then ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd) && cd \"$ROOT/app\" 2>/dev/null && [ -f package.json ] && ./node_modules/.bin/eslint --fix \"$FILE\" 2>&1 | tail -5 || true; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).file_path||'')}catch(e){}}\"); if [ -n \"$FILE\" ] && [[ \"$FILE\" == */app/* ]] && [[ \"$FILE\" =~ \\.css$ ]]; then ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd) && cd \"$ROOT/app\" 2>/dev/null && [ -f package.json ] && ./node_modules/.bin/stylelint --fix \"$FILE\" 2>&1 | tail -5 || true; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

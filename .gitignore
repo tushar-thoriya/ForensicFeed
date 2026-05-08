@@ -1,0 +1,8 @@
+# Root-level only — ai-pulse/ is covered by ai-pulse/.gitignore
+
+# pnpm store cache
+.pnpm-store/
+
+# OS
+.DS_Store
+Thumbs.db

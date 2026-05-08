@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/bin/ls '/Users/tusharpatel/Drive -->E/AI-development tracker/')",
+      "Bash(/bin/ls '/Users/tusharpatel/Drive -->E/AI-development tracker/ai-pulse/src/app/')",
+      "Bash(/bin/ls '/Users/tusharpatel/Drive -->E/AI-development tracker/ai-pulse/src/lib/')",
+      "Bash(/bin/ls *)",
+      "Bash(/usr/bin/find *)",
+      "Bash(/bin/rm *)",
+      "Bash(/usr/local/bin/node --version)",
+      "Bash(/opt/homebrew/bin/node --version)",
+      "Read(//usr/local/bin/**)",
+      "Bash(/usr/bin/xargs -I {} /usr/bin/basename {})",
+      "Bash(/usr/bin/grep -rn \"workspaceFolder\" \"/Users/tusharpatel/Drive -->E/AI-development tracker\")",
+      "Bash(/usr/bin/head -10)",
+      "Bash(/bin/sleep 8)",
+      "Bash(/bin/cat /private/tmp/claude-501/-Users-tusharpatel-Drive----E-AI-development-tracker/c6985d74-3236-4f7d-ac8d-273c5e9f9eae/tasks/by7xcxj6t.output)",
+      "Bash(/usr/bin/tail -40)",
+      "Bash(export PATH=\"/usr/bin:/bin:/usr/sbin:/sbin\")",
+      "Bash(/usr/bin/wc -l \"/Users/tusharpatel/Drive -->E/AI-development tracker/ai-pulse/src/lib/ingestion/run.ts\" \"/Users/tusharpatel/Drive -->E/AI-development tracker/ai-pulse/src/lib/db/queries/papers.ts\" \"/Users/tusharpatel/Drive -->E/AI-development tracker/ai-pulse/src/lib/db/queries/ingest-runs.ts\")",
+      "Bash(grep -E \"^\\(node|pnpm|npm|npx\\)$\")"
+    ]
+  }
+}
