@@ -1,11 +1,20 @@
-import { and, desc, eq, gte, sql, type SQL } from 'drizzle-orm'
+import { and, eq, sql, type SQL } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
 import { papers, type NewPaper, type Paper } from '@/lib/db/schema'
-import type { NormalisedPaper } from '@/types/paper'
+import type { NormalisedPaper, PaperSource, VenueType } from '@/types/paper'
 import { titleHash as computeTitleHash } from '@/lib/ingestion/dedup'
 import { assignTags, scoreRelevance } from '@/lib/ingestion/tagger'
+import { EMPTY_FILTERS, type FilterState } from '@/types/filter'
+import { SOURCE_VALUES, VENUE_TYPE_VALUES } from '@/lib/filters/labels'
+import {
+  buildConditions,
+  buildOrderBy,
+  DEFAULT_FEED_LIMIT,
+  MAX_FEED_LIMIT,
+} from '@/lib/db/queries/list-papers-query'
 
-const MAX_FEED_LIMIT = 200
+const SOURCE_SET = new Set<string>(SOURCE_VALUES)
+const VENUE_TYPE_SET = new Set<string>(VENUE_TYPE_VALUES)
 
 async function findExistingPaper(input: {
   arxivId: string | null
@@ -97,26 +106,69 @@ export async function upsertPaper(input: NormalisedPaper): Promise<UpsertResult>
 }
 
 export interface ListOptions {
+  filters?: FilterState
   limit?: number
   minRelevance?: number
   since?: Date
 }
 
 export async function listRecentPapers(options: ListOptions = {}): Promise<Paper[]> {
-  const { limit = 50, minRelevance = 0, since } = options
+  const { filters = EMPTY_FILTERS, limit = DEFAULT_FEED_LIMIT, minRelevance = 0, since } = options
   const clampedLimit = Math.min(Math.max(limit, 1), MAX_FEED_LIMIT)
-  const conditions = [gte(papers.relevanceScore, minRelevance)]
-  if (since) conditions.push(gte(papers.publishedDate, since))
+
+  const conditions = buildConditions({
+    filters,
+    minRelevance,
+    ...(since !== undefined ? { since } : {}),
+  })
+  const orderBy = buildOrderBy(filters)
 
   return db
     .select()
     .from(papers)
     .where(and(...conditions))
-    .orderBy(desc(papers.publishedDate))
+    .orderBy(...orderBy)
     .limit(clampedLimit)
 }
 
 export async function countPapers(): Promise<number> {
   const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(papers)
   return row?.count ?? 0
+}
+
+export async function getDistinctYears(): Promise<number[]> {
+  const rows = await db
+    .selectDistinct({ year: papers.year })
+    .from(papers)
+    .where(sql`${papers.year} IS NOT NULL`)
+
+  return rows
+    .map((r) => r.year)
+    .filter((y): y is number => y !== null)
+    .sort((a, b) => b - a)
+}
+
+export interface FilterFacets {
+  sources: PaperSource[]
+  venueTypes: VenueType[]
+  years: number[]
+}
+
+export async function getFilterFacets(): Promise<FilterFacets> {
+  const [sourcesRaw, venueTypesRaw, years] = await Promise.all([
+    db.selectDistinct({ value: papers.primarySource }).from(papers),
+    db.selectDistinct({ value: papers.venueType }).from(papers),
+    getDistinctYears(),
+  ])
+
+  // Guard against any DB row whose enum value drifted from the canonical
+  // set (e.g. legacy rows pre-migration, or a caller that bypassed the
+  // upsert path). Without this, an unknown value would render a blank
+  // label in the sidebar with no error.
+  const sources = sourcesRaw.map((r) => r.value).filter((v): v is PaperSource => SOURCE_SET.has(v))
+  const venueTypes = venueTypesRaw
+    .map((r) => r.value)
+    .filter((v): v is VenueType => VENUE_TYPE_SET.has(v))
+
+  return { sources, venueTypes, years }
 }
