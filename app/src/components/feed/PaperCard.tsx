@@ -1,7 +1,8 @@
-import type { Paper } from '@/lib/db/schema'
+import type { PaperWithHighlight } from '@/types/paper'
+import { renderHighlight } from '@/lib/search/render-highlight'
 
 interface PaperCardProps {
-  paper: Paper
+  paper: PaperWithHighlight
 }
 
 function formatAuthors(authors: string[]): string {
@@ -26,7 +27,7 @@ const VENUE_TYPE_LABEL: Record<string, string> = {
   preprint: 'Preprint',
 }
 
-function venueLabel(paper: Paper): string {
+function venueLabel(paper: PaperWithHighlight): string {
   if (paper.venue && paper.venue !== 'arXiv') return paper.venue
   return VENUE_TYPE_LABEL[paper.venueType] ?? paper.venueType
 }
@@ -40,7 +41,7 @@ function formatCitations(count: number): string {
   return `${count} ${count === 1 ? 'citation' : 'citations'}`
 }
 
-function resolvePaperHref(paper: Paper): string | null {
+function resolvePaperHref(paper: PaperWithHighlight): string | null {
   if (paper.pdfUrl) return paper.pdfUrl
   if (paper.arxivId) return `https://arxiv.org/abs/${paper.arxivId}`
   return null
@@ -82,7 +83,13 @@ export function PaperCard({ paper }: PaperCardProps) {
         )}
       </h2>
       <p className="paper-card-authors">{formatAuthors(paper.authors)}</p>
-      {paper.abstract ? <p className="paper-card-abstract">{paper.abstract}</p> : null}
+      {paper.headline ? (
+        <p className="paper-card-abstract paper-card-abstract-highlight">
+          {renderHighlight(paper.headline)}
+        </p>
+      ) : paper.abstract ? (
+        <p className="paper-card-abstract">{paper.abstract}</p>
+      ) : null}
       <div className="paper-card-footer">
         <span className="tag-badge tag-badge-venue">{venueLabel(paper)}</span>
         {paper.relevanceTags.slice(0, 4).map((tag) => (

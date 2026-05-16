@@ -1,7 +1,11 @@
 import type { Tag } from '@/lib/ingestion/tagger'
 import type { PaperSource, VenueType } from './paper'
 
-export type SortBy = 'newest' | 'relevance'
+// Tri-state: null means "no explicit sort param in URL". Required so we can
+// default to ts_rank_cd when searching without overriding a user who clicked
+// the "Newest" radio. Explicit 'newest' is a user choice and serialises
+// to `sort=newest`; null serialises to no `sort` param at all.
+export type SortBy = 'newest' | 'relevance' | null
 
 export type FilterDimension = 'source' | 'venueType' | 'year' | 'tag' | 'hasCode'
 
@@ -19,6 +23,7 @@ export interface FilterState {
   tags: Tag[]
   hasCode: boolean | null
   sortBy: SortBy
+  searchQuery: string | null
 }
 
 export const EMPTY_FILTERS: FilterState = {
@@ -27,14 +32,14 @@ export const EMPTY_FILTERS: FilterState = {
   years: [],
   tags: [],
   hasCode: null,
-  sortBy: 'newest',
+  sortBy: null,
+  searchQuery: null,
 }
 
-// Note: a non-default sort order counts as "filtered" so a zero-result
-// view triggers the "no matches" empty state (with clear-filters CTA)
-// rather than the "no papers ingested yet" copy. Sort is technically
-// ordering, not subsetting, but combining the two states keeps the UX
-// honest when the user changes both at once.
+// A non-default sort order or a search query counts as "filtered" so a
+// zero-result view triggers the "no matches" (or "no search matches")
+// empty state with a clear CTA, rather than the "no papers ingested yet"
+// copy.
 export function isFiltered(state: FilterState): boolean {
   return (
     state.sources.length > 0 ||
@@ -42,6 +47,7 @@ export function isFiltered(state: FilterState): boolean {
     state.years.length > 0 ||
     state.tags.length > 0 ||
     state.hasCode !== null ||
-    state.sortBy !== 'newest'
+    state.sortBy !== null ||
+    state.searchQuery !== null
   )
 }

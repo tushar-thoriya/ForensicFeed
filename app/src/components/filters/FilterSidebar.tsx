@@ -6,7 +6,9 @@ import { SOURCE_LABEL, TAG_LABEL, VENUE_TYPE_LABEL } from '@/lib/filters/labels'
 import { EMPTY_FILTERS, type FilterState, type SortBy } from '@/types/filter'
 import type { PaperSource, VenueType } from '@/types/paper'
 
-const SORT_OPTIONS: ReadonlyArray<{ value: SortBy; label: string }> = [
+type ExplicitSort = Exclude<SortBy, null>
+
+const SORT_OPTIONS: ReadonlyArray<{ value: ExplicitSort; label: string }> = [
   { value: 'newest', label: 'Newest first' },
   { value: 'relevance', label: 'Most relevant' },
 ]
@@ -55,18 +57,29 @@ export function FilterSidebar({
       <fieldset className="filter-section">
         <legend className="filter-section-legend">Sort by</legend>
         <div className="filter-radio-group">
-          {SORT_OPTIONS.map((opt) => (
-            <label key={opt.value} className="filter-radio-label">
-              <input
-                type="radio"
-                name="sort"
-                value={opt.value}
-                checked={filters.sortBy === opt.value}
-                onChange={() => onChange({ ...filters, sortBy: opt.value })}
-              />
-              <span>{opt.label}</span>
-            </label>
-          ))}
+          {SORT_OPTIONS.map((opt) => {
+            // "Newest" radio is the default visual state for both null
+            // (no explicit choice) and explicit 'newest'. Clicking it
+            // always sets the explicit value so user intent is captured
+            // in the URL — which matters when searching, because a
+            // null sortBy implicitly flips to ts_rank_cd ordering.
+            const isChecked =
+              opt.value === 'newest'
+                ? filters.sortBy === 'newest' || filters.sortBy === null
+                : filters.sortBy === opt.value
+            return (
+              <label key={opt.value} className="filter-radio-label">
+                <input
+                  type="radio"
+                  name="sort"
+                  value={opt.value}
+                  checked={isChecked}
+                  onChange={() => onChange({ ...filters, sortBy: opt.value })}
+                />
+                <span>{opt.label}</span>
+              </label>
+            )
+          })}
         </div>
       </fieldset>
 

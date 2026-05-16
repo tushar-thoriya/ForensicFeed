@@ -1,7 +1,7 @@
 import { and, eq, sql, type SQL } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
-import { papers, type NewPaper, type Paper } from '@/lib/db/schema'
-import type { NormalisedPaper, PaperSource, VenueType } from '@/types/paper'
+import { papers, type NewPaper } from '@/lib/db/schema'
+import type { NormalisedPaper, PaperSource, PaperWithHighlight, VenueType } from '@/types/paper'
 import { titleHash as computeTitleHash } from '@/lib/ingestion/dedup'
 import { assignTags, scoreRelevance } from '@/lib/ingestion/tagger'
 import { EMPTY_FILTERS, type FilterState } from '@/types/filter'
@@ -112,7 +112,13 @@ export interface ListOptions {
   since?: Date
 }
 
-export async function listRecentPapers(options: ListOptions = {}): Promise<Paper[]> {
+// Return shape is always PaperWithHighlight[] so consumers do not branch on
+// whether a search was performed; `headline` is the ts_headline snippet when
+// searching (carries START/END sentinels for renderHighlight) and `null`
+// otherwise.
+export async function listRecentPapers(
+  options: ListOptions = {},
+): Promise<PaperWithHighlight[]> {
   const { filters = EMPTY_FILTERS, limit = DEFAULT_FEED_LIMIT, minRelevance = 0, since } = options
   const clampedLimit = Math.min(Math.max(limit, 1), MAX_FEED_LIMIT)
 
@@ -123,12 +129,58 @@ export async function listRecentPapers(options: ListOptions = {}): Promise<Paper
   })
   const orderBy = buildOrderBy(filters)
 
-  return db
-    .select()
+  // ts_headline runs once per row over coalesce(title || ' ' || abstract);
+  // the StartSel/StopSel sentinels are ASCII control chars STX (\x02) and
+  // ETX (\x03) — see render-highlight.tsx for the matching splitter.
+  // MaxFragments=1 picks the best fragment by query density (not the
+  // first match).
+  //
+  // NOTE: the \x02 / \x03 escape sequences are interpreted by the JS engine
+  // at compile time, so node-postgres sends raw control-char bytes over the
+  // wire. If this SQL ever passes through a logger/middleware that strips
+  // or escapes control chars before reaching Postgres, ts_headline will
+  // silently fall back to its default <b></b> delimiters and highlights
+  // will render as literal text. Don't introduce SQL-stringifying middleware
+  // for this query without preserving the sentinel bytes.
+  //
+  // The `string | null` generic on the sql template is load-bearing: it
+  // gives drizzle's inferred select shape the right field type. Removing
+  // it would degrade `headline` to `unknown` and break PaperWithHighlight.
+  const headlineExpr =
+    filters.searchQuery !== null
+      ? sql<string | null>`ts_headline('english', coalesce(${papers.title}, '') || ' ' || coalesce(${papers.abstract}, ''), websearch_to_tsquery('english', ${filters.searchQuery}), 'StartSel=\x02,StopSel=\x03,MaxWords=35,MinWords=15,MaxFragments=1')`
+      : sql<string | null>`null::text`
+
+  const rows = await db
+    .select({
+      id: papers.id,
+      title: papers.title,
+      authors: papers.authors,
+      abstract: papers.abstract,
+      arxivId: papers.arxivId,
+      doi: papers.doi,
+      titleHash: papers.titleHash,
+      venue: papers.venue,
+      venueType: papers.venueType,
+      year: papers.year,
+      publishedDate: papers.publishedDate,
+      updatedDate: papers.updatedDate,
+      pdfUrl: papers.pdfUrl,
+      codeUrl: papers.codeUrl,
+      citationCount: papers.citationCount,
+      relevanceScore: papers.relevanceScore,
+      relevanceTags: papers.relevanceTags,
+      primarySource: papers.primarySource,
+      rawMetadata: papers.rawMetadata,
+      createdAt: papers.createdAt,
+      headline: headlineExpr,
+    })
     .from(papers)
     .where(and(...conditions))
     .orderBy(...orderBy)
     .limit(clampedLimit)
+
+  return rows
 }
 
 export async function countPapers(): Promise<number> {

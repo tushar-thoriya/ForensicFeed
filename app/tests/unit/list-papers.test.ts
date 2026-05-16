@@ -114,6 +114,16 @@ describe('buildListPapersQuery — ORDER BY', () => {
       minRelevance: 0,
     })
     expect(sql).toMatch(/order by .*published_date/i)
+    expect(sql).not.toMatch(/ts_rank_cd/i)
+  })
+
+  it('defaults to published_date desc when sortBy=null without search', () => {
+    const { sql } = buildListPapersQuery({
+      filters: with_({ sortBy: null }),
+      minRelevance: 0,
+    })
+    expect(sql).toMatch(/order by .*published_date/i)
+    expect(sql).not.toMatch(/ts_rank_cd/i)
   })
 
   it('orders by relevance_score desc, then published_date desc when sortBy=relevance', () => {
@@ -126,6 +136,88 @@ describe('buildListPapersQuery — ORDER BY', () => {
     const dateIdx = orderClause.search(/published_date/)
     expect(relIdx).toBeGreaterThanOrEqual(0)
     expect(dateIdx).toBeGreaterThan(relIdx)
+  })
+})
+
+describe('buildListPapersQuery — full-text search', () => {
+  it('does NOT include websearch_to_tsquery when searchQuery is null', () => {
+    const { sql } = buildListPapersQuery({
+      filters: with_({ searchQuery: null }),
+      minRelevance: 0,
+    })
+    expect(sql).not.toMatch(/websearch_to_tsquery/i)
+    expect(sql).not.toMatch(/search_vector/i)
+  })
+
+  it('adds search_vector @@ websearch_to_tsquery condition when searching', () => {
+    const { sql, params } = buildListPapersQuery({
+      filters: with_({ searchQuery: 'forgery' }),
+      minRelevance: 0,
+    })
+    expect(sql).toMatch(/search_vector/i)
+    expect(sql).toMatch(/websearch_to_tsquery/i)
+    expect(sql).toMatch(/@@/)
+    expect(params).toContain('forgery')
+  })
+
+  it('uses ts_rank_cd DESC in ORDER BY when searching with no explicit sort (sortBy=null)', () => {
+    const { sql } = buildListPapersQuery({
+      filters: with_({ searchQuery: 'forgery', sortBy: null }),
+      minRelevance: 0,
+    })
+    expect(sql).toMatch(/ts_rank_cd/i)
+    const orderClause = sql.match(/order by[\s\S]+?limit/i)?.[0] ?? ''
+    // Regression guard: direction must be DESC — without it the highest-
+    // ranked matches would sort last and search would feel broken.
+    expect(orderClause).toMatch(/ts_rank_cd[^,]*desc/i)
+  })
+
+  it('explicit sortBy=newest overrides ts_rank_cd default when searching', () => {
+    const { sql } = buildListPapersQuery({
+      filters: with_({ searchQuery: 'forgery', sortBy: 'newest' }),
+      minRelevance: 0,
+    })
+    expect(sql).not.toMatch(/order by.*ts_rank_cd/i)
+    expect(sql).toMatch(/order by .*published_date/i)
+  })
+
+  it('explicit sortBy=relevance overrides ts_rank_cd default when searching', () => {
+    const { sql } = buildListPapersQuery({
+      filters: with_({ searchQuery: 'forgery', sortBy: 'relevance' }),
+      minRelevance: 0,
+    })
+    expect(sql).not.toMatch(/order by.*ts_rank_cd/i)
+    expect(sql).toMatch(/relevance_score/i)
+  })
+
+  it('binds the query string param both in WHERE and ORDER BY when searching with sortBy=null', () => {
+    const { params } = buildListPapersQuery({
+      filters: with_({ searchQuery: 'forgery', sortBy: null }),
+      minRelevance: 0,
+    })
+    // The query string should appear twice: once for the WHERE @@ predicate,
+    // once for the ORDER BY ts_rank_cd. (Triple-eval would be three: WHERE,
+    // ORDER BY, and headline-SELECT — but headline lives in papers.ts, not
+    // in the pure SQL builder, so we only see two here.)
+    const occurrences = params.filter((p) => p === 'forgery').length
+    expect(occurrences).toBe(2)
+  })
+
+  it('combines search with other filters using AND', () => {
+    const { sql, params } = buildListPapersQuery({
+      filters: with_({
+        searchQuery: 'forgery',
+        tags: ['localization'],
+        hasCode: true,
+      }),
+      minRelevance: 0.2,
+    })
+    expect(sql).toMatch(/search_vector/i)
+    expect(sql).toMatch(/\?\|/)
+    expect(sql).toMatch(/code_url/i)
+    expect(params).toContain('forgery')
+    expect(params).toContain('localization')
+    expect(params).toContain(0.2)
   })
 })
 

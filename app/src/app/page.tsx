@@ -1,15 +1,19 @@
 import { getFilterFacets, listRecentPapers } from '@/lib/db/queries/papers'
-import type { Paper } from '@/lib/db/schema'
+import type { PaperWithHighlight } from '@/types/paper'
 import { PaperList } from '@/components/feed/PaperList'
 import { EmptyState } from '@/components/feed/EmptyState'
 import { FilterPanel } from '@/components/filters/FilterPanel'
-import { parseFilterParams } from '@/lib/filters/parse'
+import { SearchInput } from '@/components/search/SearchInput'
+import { parseFilterParams, serialiseFilters } from '@/lib/filters/parse'
 import { isFiltered, type FilterState } from '@/types/filter'
 import '@/components/feed/feed.css'
 import '@/components/filters/filters.css'
+import '@/components/search/search.css'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+
+const RESULT_STATUS_ID = 'feed-result-status'
 
 interface FeedPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -30,11 +34,22 @@ function paramsToURLSearchParams(
   return sp
 }
 
+function clearSearchHref(filters: FilterState): string {
+  const cleared = serialiseFilters({ ...filters, searchQuery: null }).toString()
+  return cleared.length === 0 ? '/' : `/?${cleared}`
+}
+
+function sortLabel(filters: FilterState): string {
+  if (filters.sortBy === 'relevance') return 'most relevant'
+  if (filters.searchQuery !== null && filters.sortBy === null) return 'ranked by match'
+  return 'newest first'
+}
+
 export default async function FeedPage({ searchParams }: FeedPageProps) {
   const resolved = await searchParams
   const filters: FilterState = parseFilterParams(paramsToURLSearchParams(resolved))
 
-  let papers: Paper[] = []
+  let papers: PaperWithHighlight[] = []
   let facets = { sources: [], venueTypes: [], years: [] } as Awaited<
     ReturnType<typeof getFilterFacets>
   >
@@ -46,11 +61,29 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
       getFilterFacets(),
     ])
   } catch (error) {
-    errorMessage = error instanceof Error ? error.message : 'Failed to load papers'
+    // Log full error context server-side; never reflect raw DB / connection
+    // detail to the client (could leak host/port/query fragments).
+    console.error('[FeedPage] listRecentPapers/getFilterFacets failed', error)
+    errorMessage = 'Failed to load papers'
   }
 
   const filtered = isFiltered(filters)
-  const sortLabel = filters.sortBy === 'relevance' ? 'most relevant' : 'newest first'
+  const searching = filters.searchQuery !== null
+  const emptyVariant: 'no-papers' | 'no-matches' | 'no-search-matches' = searching
+    ? 'no-search-matches'
+    : filtered
+      ? 'no-matches'
+      : 'no-papers'
+
+  // Split text: liveCount is the only piece announced by screen readers
+  // (avoids re-announcing the full query echo on every keystroke);
+  // contextSuffix is visible-only so sighted users still see the query.
+  const liveCount = searching
+    ? `${papers.length} ${papers.length === 1 ? 'result' : 'results'}`
+    : `${papers.length} ${papers.length === 1 ? 'paper' : 'papers'}`
+  const contextSuffix = searching
+    ? ` for “${filters.searchQuery}” · ${sortLabel(filters)}`
+    : ` · ${sortLabel(filters)}`
 
   return (
     <main className="feed-with-sidebar">
@@ -69,8 +102,15 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             Open-access research on image forgery detection and localization — tracked so nothing
             slips past.
           </p>
-          <p className="feed-meta" aria-live="polite" role="status">
-            {errorMessage ? 'connection issue' : `${papers.length} papers · ${sortLabel}`}
+          <SearchInput
+            initialValue={filters.searchQuery ?? ''}
+            resultStatusId={RESULT_STATUS_ID}
+          />
+          <p id={RESULT_STATUS_ID} className="feed-meta">
+            <span aria-live="polite" role="status">
+              {errorMessage ? 'connection issue' : liveCount}
+            </span>
+            {!errorMessage && <span>{contextSuffix}</span>}
           </p>
         </header>
         {errorMessage ? (
@@ -78,7 +118,11 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             <p>{errorMessage}</p>
           </div>
         ) : papers.length === 0 ? (
-          <EmptyState variant={filtered ? 'no-matches' : 'no-papers'} />
+          <EmptyState
+            variant={emptyVariant}
+            query={filters.searchQuery}
+            clearSearchHref={clearSearchHref(filters)}
+          />
         ) : (
           <PaperList papers={papers} />
         )}
@@ -86,4 +130,3 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     </main>
   )
 }
-

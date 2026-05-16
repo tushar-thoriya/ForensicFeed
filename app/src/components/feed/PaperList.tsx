@@ -1,19 +1,14 @@
-import type { Paper } from '@/lib/db/schema'
+import type { PaperWithHighlight } from '@/types/paper'
 import { PaperCard } from './PaperCard'
 
 interface PaperListProps {
-  papers: Paper[]
+  papers: PaperWithHighlight[]
 }
 
+// Callers must guard the empty case themselves and render <EmptyState/>
+// with the appropriate variant — page.tsx does this. PaperList's only
+// responsibility is laying out a non-empty list.
 export function PaperList({ papers }: PaperListProps) {
-  if (papers.length === 0) {
-    return (
-      <div className="empty-state">
-        <p>No papers yet. Trigger an ingest run to populate the feed.</p>
-      </div>
-    )
-  }
-
   return (
     <ul className="feed-list">
       {papers.map((paper) => (

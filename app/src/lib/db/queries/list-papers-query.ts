@@ -37,6 +37,18 @@ function tagOverlapCondition(tags: readonly string[]): SQL {
   return sql`${papers.relevanceTags} ?| ARRAY[${sql.join(literals, sql`, `)}]`
 }
 
+// `search_vector` is a generated tsvector column maintained by Postgres but
+// intentionally not declared in schema.ts — see A5-PRD.md scope §1. All
+// references go through raw sql fragments here (same pattern as the jsonb
+// `?|` operator above).
+function searchMatchCondition(query: string): SQL {
+  return sql`search_vector @@ websearch_to_tsquery('english', ${query})`
+}
+
+function tsRankExpr(query: string): SQL {
+  return sql`ts_rank_cd(search_vector, websearch_to_tsquery('english', ${query}))`
+}
+
 export function buildConditions(input: BuildListPapersInput): SQL[] {
   const { filters, minRelevance, since } = input
   const conditions: SQL[] = [gte(papers.relevanceScore, minRelevance)]
@@ -48,13 +60,26 @@ export function buildConditions(input: BuildListPapersInput): SQL[] {
   if (filters.tags.length > 0) conditions.push(tagOverlapCondition(filters.tags))
   if (filters.hasCode === true) conditions.push(isNotNull(papers.codeUrl))
   else if (filters.hasCode === false) conditions.push(isNull(papers.codeUrl))
+  if (filters.searchQuery !== null) conditions.push(searchMatchCondition(filters.searchQuery))
 
   return conditions
 }
 
+// ORDER BY precedence:
+//   sortBy === 'relevance' → relevance_score desc, published_date desc (user override wins)
+//   sortBy === 'newest'    → published_date desc (user override wins)
+//   sortBy === null        → if searching: ts_rank_cd desc, published_date desc
+//                          → else:        published_date desc (the historical default)
 export function buildOrderBy(filters: FilterState): SQL[] {
   if (filters.sortBy === 'relevance') {
     return [desc(papers.relevanceScore), desc(papers.publishedDate)]
+  }
+  if (filters.sortBy === 'newest') {
+    return [desc(papers.publishedDate)]
+  }
+  // sortBy === null
+  if (filters.searchQuery !== null) {
+    return [sql`${tsRankExpr(filters.searchQuery)} DESC`, desc(papers.publishedDate)]
   }
   return [desc(papers.publishedDate)]
 }

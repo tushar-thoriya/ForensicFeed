@@ -32,8 +32,29 @@ describe('parseFilterParams', () => {
     expect(parseFilterParams(params('sort=relevance')).sortBy).toBe('relevance')
   })
 
-  it('falls back to newest for invalid sort', () => {
-    expect(parseFilterParams(params('sort=invalid')).sortBy).toBe('newest')
+  it('parses explicit sort=newest distinct from absent (tri-state)', () => {
+    expect(parseFilterParams(params('sort=newest')).sortBy).toBe('newest')
+    expect(parseFilterParams(params('')).sortBy).toBeNull()
+  })
+
+  it('falls back to null for invalid sort (same as absent)', () => {
+    expect(parseFilterParams(params('sort=invalid')).sortBy).toBeNull()
+  })
+
+  it('parses search query', () => {
+    expect(parseFilterParams(params('q=forgery')).searchQuery).toBe('forgery')
+  })
+
+  it('drops empty q (parses to null)', () => {
+    expect(parseFilterParams(params('q=')).searchQuery).toBeNull()
+  })
+
+  it('drops whitespace-only q', () => {
+    expect(parseFilterParams(params('q=%20%20')).searchQuery).toBeNull()
+  })
+
+  it('normalises q whitespace', () => {
+    expect(parseFilterParams(params('q=copy%20%20move')).searchQuery).toBe('copy move')
   })
 
   it('drops unknown source values silently', () => {
@@ -97,14 +118,34 @@ describe('serialiseFilters', () => {
     expect(s).toBe('hasCode=0')
   })
 
-  it('omits sort when default newest', () => {
-    const s = serialiseFilters({ ...EMPTY_FILTERS, sortBy: 'newest' }).toString()
+  it('omits sort when null (no explicit user choice)', () => {
+    const s = serialiseFilters({ ...EMPTY_FILTERS, sortBy: null }).toString()
     expect(s).not.toMatch(/sort/)
   })
 
-  it('serialises sort=relevance when non-default', () => {
+  it('serialises explicit sort=newest (user chose newest, preserves intent)', () => {
+    const s = serialiseFilters({ ...EMPTY_FILTERS, sortBy: 'newest' }).toString()
+    expect(s).toBe('sort=newest')
+  })
+
+  it('serialises sort=relevance', () => {
     const s = serialiseFilters({ ...EMPTY_FILTERS, sortBy: 'relevance' }).toString()
     expect(s).toBe('sort=relevance')
+  })
+
+  it('omits q when null', () => {
+    const s = serialiseFilters({ ...EMPTY_FILTERS, searchQuery: null }).toString()
+    expect(s).not.toMatch(/(^|&)q=/)
+  })
+
+  it('serialises q when present', () => {
+    const s = serialiseFilters({ ...EMPTY_FILTERS, searchQuery: 'forgery' }).toString()
+    expect(s).toBe('q=forgery')
+  })
+
+  it('encodes special characters in q', () => {
+    const s = serialiseFilters({ ...EMPTY_FILTERS, searchQuery: 'copy move' }).toString()
+    expect(s).toBe('q=copy+move')
   })
 })
 
@@ -119,6 +160,9 @@ describe('round-trip', () => {
     { ...EMPTY_FILTERS, hasCode: true },
     { ...EMPTY_FILTERS, hasCode: false },
     { ...EMPTY_FILTERS, sortBy: 'relevance' },
+    { ...EMPTY_FILTERS, sortBy: 'newest' },
+    { ...EMPTY_FILTERS, searchQuery: 'forgery' },
+    { ...EMPTY_FILTERS, searchQuery: 'copy move detection' },
     {
       sources: ['arxiv', 'cvf'],
       venueTypes: ['conference'],
@@ -126,6 +170,16 @@ describe('round-trip', () => {
       tags: ['localization'],
       hasCode: true,
       sortBy: 'relevance',
+      searchQuery: null,
+    },
+    {
+      sources: ['arxiv'],
+      venueTypes: [],
+      years: [],
+      tags: [],
+      hasCode: null,
+      sortBy: null,
+      searchQuery: 'forgery localization',
     },
   ]
 
