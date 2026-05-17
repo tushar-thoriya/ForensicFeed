@@ -7,7 +7,7 @@
 
 ## Status
 
-Phases shipped: **A1 → A5**. Up next: A6 (save + read-status tracking).
+Phases shipped: **A1 → A6**. Up next: A7 (paper detail page + design pass).
 
 | Capability | Where |
 |---|---|
@@ -15,6 +15,7 @@ Phases shipped: **A1 → A5**. Up next: A6 (save + read-status tracking).
 | Relevance scoring + auto-tagging | `src/lib/ingestion/tagger.ts` |
 | Filter sidebar with URL-as-state | `src/components/filters/` |
 | Full-text search (Postgres `tsvector` + GIN, ranked by `ts_rank_cd`, highlighted via `ts_headline`) | `src/components/search/`, `src/lib/search/`, `drizzle/migrations/0003_add_search_vector.sql` |
+| Save + read-status tracking (optimistic toggles, `/saved` view, inline dim) | `src/components/paper-actions/`, `src/app/saved/`, `src/lib/db/queries/saves.ts` |
 
 ## Quick start
 
