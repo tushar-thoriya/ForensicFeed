@@ -40,7 +40,7 @@ describe('ReadToggle', () => {
     const checkbox = getByRole('checkbox') as HTMLInputElement
     fireEvent.click(checkbox)
     await waitFor(() => expect(fetchSpy).toHaveBeenCalledWith('/api/read-status', expect.any(Object)))
-    const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string)
+    const body = JSON.parse((fetchSpy.mock.calls[0]?.[1] as RequestInit).body as string)
     expect(body).toEqual({ paperId: 'arxiv:9', status: 'read' })
   })
 
@@ -49,7 +49,7 @@ describe('ReadToggle', () => {
     const checkbox = getByRole('checkbox') as HTMLInputElement
     fireEvent.click(checkbox)
     await waitFor(() => expect(fetchSpy).toHaveBeenCalled())
-    const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string)
+    const body = JSON.parse((fetchSpy.mock.calls[0]?.[1] as RequestInit).body as string)
     expect(body).toEqual({ paperId: 'arxiv:9', status: 'unread' })
   })
 

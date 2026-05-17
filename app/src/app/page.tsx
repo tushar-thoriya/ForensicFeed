@@ -100,6 +100,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
       <div>
         <header className="feed-header">
           <FeedNav current="feed" />
+          <p className="feed-eyebrow">the feed</p>
           <h1 className="feed-title">ForensicFeed</h1>
           <p className="feed-subtitle">
             Open-access research on image forgery detection and localization — tracked so nothing

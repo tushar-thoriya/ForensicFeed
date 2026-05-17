@@ -47,7 +47,7 @@ describe('SaveButton', () => {
         }),
       )
     })
-    const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string)
+    const body = JSON.parse((fetchSpy.mock.calls[0]?.[1] as RequestInit).body as string)
     expect(body).toEqual({ paperId: 'arxiv:42', saved: true })
     await waitFor(() => {
       expect(getByRole('button').getAttribute('aria-pressed')).toBe('true')

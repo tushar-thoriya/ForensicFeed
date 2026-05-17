@@ -100,6 +100,7 @@ export default async function SavedPage({ searchParams }: SavedPageProps) {
       <div>
         <header className="feed-header">
           <FeedNav current="saved" />
+          <p className="feed-eyebrow">your library</p>
           <h1 className="feed-title">Saved papers</h1>
           <p className="feed-subtitle">
             Papers you bookmarked, most recently saved first. Filters and search compose with

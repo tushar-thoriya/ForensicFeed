@@ -205,6 +205,47 @@ export async function listRecentPapers(
   return rows
 }
 
+// Single-paper read by canonical id. Mirrors listRecentPapers' LEFT JOIN
+// projection so the detail page consumes the same PaperWithUserState shape
+// (isSaved/isRead always present, headline always null — no search context
+// on detail). Returns null when no row matches; the route maps that to
+// notFound() so /papers/badid surfaces a real 404.
+export async function getPaperById(id: string): Promise<PaperWithUserState | null> {
+  const [row] = await db
+    .select({
+      id: papers.id,
+      title: papers.title,
+      authors: papers.authors,
+      abstract: papers.abstract,
+      arxivId: papers.arxivId,
+      doi: papers.doi,
+      titleHash: papers.titleHash,
+      venue: papers.venue,
+      venueType: papers.venueType,
+      year: papers.year,
+      publishedDate: papers.publishedDate,
+      updatedDate: papers.updatedDate,
+      pdfUrl: papers.pdfUrl,
+      codeUrl: papers.codeUrl,
+      citationCount: papers.citationCount,
+      relevanceScore: papers.relevanceScore,
+      relevanceTags: papers.relevanceTags,
+      primarySource: papers.primarySource,
+      rawMetadata: papers.rawMetadata,
+      createdAt: papers.createdAt,
+      headline: sql<string | null>`null::text`,
+      isSaved: sql<boolean>`(${userSaves.paperId} is not null)`,
+      isRead: sql<boolean>`(${readStatus.status} = 'read')`,
+    })
+    .from(papers)
+    .leftJoin(userSaves, eq(userSaves.paperId, papers.id))
+    .leftJoin(readStatus, eq(readStatus.paperId, papers.id))
+    .where(eq(papers.id, id))
+    .limit(1)
+
+  return row ?? null
+}
+
 export async function countPapers(): Promise<number> {
   const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(papers)
   return row?.count ?? 0

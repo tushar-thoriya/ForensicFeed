@@ -58,8 +58,8 @@ See [`app/README.md`](app/README.md) for the full command reference and [`CLAUDE
 | A4 | Filter sidebar; URL-as-state; sort-by-relevance toggle | ✅ shipped |
 | A5 | Full-text search (Postgres `tsvector`) | ✅ shipped |
 | A6 | Save + read-status tracking; saved papers view | ✅ shipped |
-| A7 | Paper detail page; design pass | next |
-| A8 | Production deploy (Vercel + Supabase + CSP + monitoring) | planned |
+| A7 | Paper detail page; design pass | ✅ shipped |
+| A8 | Production deploy (Vercel + Supabase + CSP + monitoring) | next |
 | A9 | E2E coverage; a11y sweep; error/empty states | planned |
 
 ### Phase B — Enhancements

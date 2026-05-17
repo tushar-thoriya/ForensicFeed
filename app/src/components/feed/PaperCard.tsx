@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { PaperWithUserState } from '@/types/paper'
 import { renderHighlight } from '@/lib/search/render-highlight'
 import { SaveButton } from '@/components/paper-actions/SaveButton'
@@ -43,14 +44,15 @@ function formatCitations(count: number): string {
   return `${count} ${count === 1 ? 'citation' : 'citations'}`
 }
 
-function resolvePaperHref(paper: PaperWithUserState): string | null {
+function pdfHref(paper: PaperWithUserState): string | null {
   if (paper.pdfUrl) return paper.pdfUrl
   if (paper.arxivId) return `https://arxiv.org/abs/${paper.arxivId}`
   return null
 }
 
 export function PaperCard({ paper }: PaperCardProps) {
-  const href = resolvePaperHref(paper)
+  const detailHref = `/papers/${encodeURIComponent(paper.id)}`
+  const externalHref = pdfHref(paper)
   const titleId = `paper-${paper.id}-title`
   const citationCount =
     typeof paper.citationCount === 'number' && paper.citationCount > 0
@@ -72,19 +74,9 @@ export function PaperCard({ paper }: PaperCardProps) {
         ) : null}
       </div>
       <h2 className="paper-card-title" id={titleId}>
-        {href ? (
-          <a
-            className="paper-card-title-link"
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {paper.title}
-            <span className="sr-only"> (opens in new tab)</span>
-          </a>
-        ) : (
-          paper.title
-        )}
+        <Link className="paper-card-title-link" href={detailHref}>
+          {paper.title}
+        </Link>
       </h2>
       <p className="paper-card-authors">{formatAuthors(paper.authors)}</p>
       {paper.headline ? (
@@ -101,6 +93,17 @@ export function PaperCard({ paper }: PaperCardProps) {
             {tag}
           </span>
         ))}
+        {externalHref ? (
+          <a
+            className="tag-badge tag-badge-code"
+            href={externalHref}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>pdf</span>
+            <span className="sr-only"> (opens in new tab)</span>
+          </a>
+        ) : null}
         {paper.codeUrl ? (
           <a
             className="tag-badge tag-badge-code"
