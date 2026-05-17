@@ -146,6 +146,13 @@ export async function listRecentPapers(
   // The `string | null` generic on the sql template is load-bearing: it
   // gives drizzle's inferred select shape the right field type. Removing
   // it would degrade `headline` to `unknown` and break PaperWithHighlight.
+  //
+  // The ts_headline options string ('StartSel=…,StopSel=…,MaxWords=…') MUST
+  // stay a static string literal. Drizzle binds ${papers.title} and
+  // ${filters.searchQuery} as $N params, but the options string is rendered
+  // inline. Making it dynamic (e.g. per-locale regconfig) would open a SQL-
+  // injection vector. If options must vary, build a whitelist enum and
+  // branch the entire sql`...` template, never interpolate user input.
   const headlineExpr =
     filters.searchQuery !== null
       ? sql<string | null>`ts_headline('english', coalesce(${papers.title}, '') || ' ' || coalesce(${papers.abstract}, ''), websearch_to_tsquery('english', ${filters.searchQuery}), 'StartSel=\x02,StopSel=\x03,MaxWords=35,MinWords=15,MaxFragments=1')`

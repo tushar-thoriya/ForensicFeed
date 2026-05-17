@@ -169,7 +169,7 @@ describe('buildListPapersQuery — full-text search', () => {
     const orderClause = sql.match(/order by[\s\S]+?limit/i)?.[0] ?? ''
     // Regression guard: direction must be DESC — without it the highest-
     // ranked matches would sort last and search would feel broken.
-    expect(orderClause).toMatch(/ts_rank_cd[^,]*desc/i)
+    expect(orderClause).toMatch(/ts_rank_cd\(.*?\)\s+desc/i)
   })
 
   it('explicit sortBy=newest overrides ts_rank_cd default when searching', () => {
