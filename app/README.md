@@ -1,9 +1,20 @@
 # ForensicFeed
 
 > Personal research paper tracker for image forgery detection & localization.
-> Aggregates open-access papers from arXiv, Hugging Face Papers, Semantic Scholar, CVF, and OpenReview — tagged, scored by relevance, filterable by venue/year/topic.
+> Aggregates open-access papers from arXiv, Hugging Face Papers, Semantic Scholar, CVF, and OpenReview — tagged, scored by relevance, filterable by venue/year/topic, **searchable** by full-text.
 >
 > See `../CLAUDE.md` for the engineering playbook and `../Plan.md` for the task plan.
+
+## Status
+
+Phases shipped: **A1 → A5**. Up next: A6 (save + read-status tracking).
+
+| Capability | Where |
+|---|---|
+| Multi-source ingest (arXiv, HF, Semantic Scholar, CVF, OpenReview) | `src/lib/ingestion/` + Inngest cron |
+| Relevance scoring + auto-tagging | `src/lib/ingestion/tagger.ts` |
+| Filter sidebar with URL-as-state | `src/components/filters/` |
+| Full-text search (Postgres `tsvector` + GIN, ranked by `ts_rank_cd`, highlighted via `ts_headline`) | `src/components/search/`, `src/lib/search/`, `drizzle/migrations/0003_add_search_vector.sql` |
 
 ## Quick start
 
