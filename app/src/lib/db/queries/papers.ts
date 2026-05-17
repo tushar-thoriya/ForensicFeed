@@ -1,7 +1,12 @@
 import { and, eq, sql, type SQL } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
-import { papers, type NewPaper } from '@/lib/db/schema'
-import type { NormalisedPaper, PaperSource, PaperWithHighlight, VenueType } from '@/types/paper'
+import { papers, readStatus, userSaves, type NewPaper } from '@/lib/db/schema'
+import type {
+  NormalisedPaper,
+  PaperSource,
+  PaperWithUserState,
+  VenueType,
+} from '@/types/paper'
 import { titleHash as computeTitleHash } from '@/lib/ingestion/dedup'
 import { assignTags, scoreRelevance } from '@/lib/ingestion/tagger'
 import { EMPTY_FILTERS, type FilterState } from '@/types/filter'
@@ -112,13 +117,15 @@ export interface ListOptions {
   since?: Date
 }
 
-// Return shape is always PaperWithHighlight[] so consumers do not branch on
-// whether a search was performed; `headline` is the ts_headline snippet when
-// searching (carries START/END sentinels for renderHighlight) and `null`
-// otherwise.
+// Return shape is always PaperWithUserState[] so consumers do not branch on
+// whether a search was performed or whether per-paper state exists; `headline`
+// is the ts_headline snippet when searching (carries START/END sentinels for
+// renderHighlight) and `null` otherwise. `isSaved` / `isRead` come from LEFT
+// JOINs on user_saves / read_status — absent rows project to false so
+// consumers can read them as plain booleans (see PaperWithUserState).
 export async function listRecentPapers(
   options: ListOptions = {},
-): Promise<PaperWithHighlight[]> {
+): Promise<PaperWithUserState[]> {
   const { filters = EMPTY_FILTERS, limit = DEFAULT_FEED_LIMIT, minRelevance = 0, since } = options
   const clampedLimit = Math.min(Math.max(limit, 1), MAX_FEED_LIMIT)
 
@@ -181,8 +188,16 @@ export async function listRecentPapers(
       rawMetadata: papers.rawMetadata,
       createdAt: papers.createdAt,
       headline: headlineExpr,
+      // LEFT JOIN projections: absent rows become false. The boolean cast
+      // is explicit so drizzle infers the column type as boolean (not
+      // unknown). isRead is true ONLY for status='read'; reading/archived
+      // count as not-read in A6 per A6-PRD scope (binary read UI).
+      isSaved: sql<boolean>`(${userSaves.paperId} is not null)`,
+      isRead: sql<boolean>`(${readStatus.status} = 'read')`,
     })
     .from(papers)
+    .leftJoin(userSaves, eq(userSaves.paperId, papers.id))
+    .leftJoin(readStatus, eq(readStatus.paperId, papers.id))
     .where(and(...conditions))
     .orderBy(...orderBy)
     .limit(clampedLimit)

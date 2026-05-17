@@ -1,4 +1,5 @@
-import { getFilterFacets, listRecentPapers } from '@/lib/db/queries/papers'
+import { listSavedPapers } from '@/lib/db/queries/saved-papers'
+import { getFilterFacets } from '@/lib/db/queries/papers'
 import type { PaperWithUserState } from '@/types/paper'
 import { PaperList } from '@/components/feed/PaperList'
 import { EmptyState } from '@/components/feed/EmptyState'
@@ -15,9 +16,9 @@ import '@/components/paper-actions/paper-actions.css'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-const RESULT_STATUS_ID = 'feed-result-status'
+const RESULT_STATUS_ID = 'saved-result-status'
 
-interface FeedPageProps {
+interface SavedPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
@@ -38,16 +39,18 @@ function paramsToURLSearchParams(
 
 function clearSearchHref(filters: FilterState): string {
   const cleared = serialiseFilters({ ...filters, searchQuery: null }).toString()
-  return cleared.length === 0 ? '/' : `/?${cleared}`
+  return cleared.length === 0 ? '/saved' : `/saved?${cleared}`
 }
 
 function sortLabel(filters: FilterState): string {
   if (filters.sortBy === 'relevance') return 'most relevant'
-  if (filters.searchQuery !== null && filters.sortBy === null) return 'ranked by match'
-  return 'newest first'
+  if (filters.sortBy === 'newest') return 'newest first'
+  if (filters.searchQuery !== null) return 'ranked by match'
+  // /saved default: save-recency (saved_at DESC)
+  return 'recently saved first'
 }
 
-export default async function FeedPage({ searchParams }: FeedPageProps) {
+export default async function SavedPage({ searchParams }: SavedPageProps) {
   const resolved = await searchParams
   const filters: FilterState = parseFilterParams(paramsToURLSearchParams(resolved))
 
@@ -59,32 +62,29 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
   try {
     ;[papers, facets] = await Promise.all([
-      listRecentPapers({ filters, limit: 50, minRelevance: 0.2 }),
+      listSavedPapers({ filters, limit: 50, minRelevance: 0 }),
       getFilterFacets(),
     ])
   } catch (error) {
-    // Log full error context server-side; never reflect raw DB / connection
-    // detail to the client (could leak host/port/query fragments).
-    console.error('[FeedPage] listRecentPapers/getFilterFacets failed', error)
-    errorMessage = 'Failed to load papers'
+    console.error('[SavedPage] listSavedPapers/getFilterFacets failed', error)
+    errorMessage = 'Failed to load saved papers'
   }
 
   const filtered = isFiltered(filters)
   const searching = filters.searchQuery !== null
-  const emptyVariant: 'no-papers' | 'no-matches' | 'no-search-matches' = searching
+
+  // No saves at all when filters are inactive → "nothing saved yet".
+  // Saves exist but filters/search exclude them → reuse the existing
+  // no-matches / no-search-matches copy.
+  const emptyVariant: 'nothing-saved' | 'no-matches' | 'no-search-matches' = searching
     ? 'no-search-matches'
     : filtered
       ? 'no-matches'
-      : 'no-papers'
+      : 'nothing-saved'
 
-  // Split text: liveCount is the only piece announced by screen readers
-  // (avoids re-announcing the full query echo on every keystroke);
-  // contextSuffix is visible-only so sighted users still see the query.
-  const liveCount = searching
-    ? `${papers.length} ${papers.length === 1 ? 'result' : 'results'}`
-    : `${papers.length} ${papers.length === 1 ? 'paper' : 'papers'}`
+  const liveCount = `${papers.length} ${papers.length === 1 ? 'paper' : 'papers'} saved`
   const contextSuffix = searching
-    ? ` for “${filters.searchQuery}” · ${sortLabel(filters)}`
+    ? ` matching “${filters.searchQuery}” · ${sortLabel(filters)}`
     : ` · ${sortLabel(filters)}`
 
   return (
@@ -99,11 +99,11 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
       )}
       <div>
         <header className="feed-header">
-          <FeedNav current="feed" />
-          <h1 className="feed-title">ForensicFeed</h1>
+          <FeedNav current="saved" />
+          <h1 className="feed-title">Saved papers</h1>
           <p className="feed-subtitle">
-            Open-access research on image forgery detection and localization — tracked so nothing
-            slips past.
+            Papers you bookmarked, most recently saved first. Filters and search compose with
+            this view.
           </p>
           <SearchInput
             initialValue={filters.searchQuery ?? ''}

@@ -1,0 +1,72 @@
+.paper-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md, 1rem);
+  margin-top: var(--space-sm, 0.5rem);
+  padding-top: var(--space-sm, 0.5rem);
+  border-top: 1px solid var(--color-border, oklch(92% 0 0));
+}
+
+.paper-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 32px;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary, oklch(42% 0 0));
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast, 150ms) var(--ease-out-expo, ease),
+    color var(--duration-fast, 150ms) var(--ease-out-expo, ease),
+    border-color var(--duration-fast, 150ms) var(--ease-out-expo, ease);
+}
+
+.paper-action:hover {
+  background: var(--color-surface-raised, oklch(96% 0 0));
+  color: var(--color-text-primary, oklch(18% 0 0));
+}
+
+.paper-action:focus-visible {
+  outline: 2px solid var(--color-accent, oklch(55% 0.18 250));
+  outline-offset: 2px;
+}
+
+.paper-action:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.save-button-saved {
+  color: var(--color-accent, oklch(55% 0.18 250));
+}
+
+.save-button-saved:hover {
+  color: var(--color-accent, oklch(55% 0.18 250));
+}
+
+.save-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.read-toggle {
+  cursor: pointer;
+}
+
+.read-toggle-input {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent, oklch(55% 0.18 250));
+  cursor: inherit;
+}
+
+.read-toggle-input:disabled {
+  cursor: progress;
+}

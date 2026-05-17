@@ -1,8 +1,8 @@
-import type { PaperWithHighlight } from '@/types/paper'
+import type { PaperWithUserState } from '@/types/paper'
 import { PaperCard } from './PaperCard'
 
 interface PaperListProps {
-  papers: PaperWithHighlight[]
+  papers: PaperWithUserState[]
 }
 
 // Callers must guard the empty case themselves and render <EmptyState/>

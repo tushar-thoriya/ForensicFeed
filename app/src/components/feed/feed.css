@@ -54,11 +54,28 @@
   display: block;
   position: relative;
   padding: var(--space-lg) 0;
+  transition:
+    opacity var(--duration-normal, 250ms) var(--ease-out-expo, ease),
+    filter var(--duration-normal, 250ms) var(--ease-out-expo, ease);
 }
 
 .paper-card:hover .paper-card-title-link,
 .paper-card:focus-within .paper-card-title-link {
   color: var(--color-accent);
+}
+
+/* Read cards dim so the eye skips past them on scan-through. Hover and
+   keyboard focus restore opacity so the card is still clearly usable —
+   we want to fade, not hide. */
+.paper-card-read {
+  opacity: var(--read-opacity, 0.55);
+  filter: saturate(var(--read-saturate, 0.85));
+}
+
+.paper-card-read:hover,
+.paper-card-read:focus-within {
+  opacity: 0.95;
+  filter: saturate(1);
 }
 
 .paper-card-meta {

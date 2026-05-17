@@ -1,6 +1,10 @@
 import Link from 'next/link'
 
-export type EmptyStateVariant = 'no-papers' | 'no-matches' | 'no-search-matches'
+export type EmptyStateVariant =
+  | 'no-papers'
+  | 'no-matches'
+  | 'no-search-matches'
+  | 'nothing-saved'
 
 interface EmptyStateProps {
   variant: EmptyStateVariant
@@ -28,6 +32,17 @@ export function EmptyState({ variant, query, clearSearchHref = '/' }: EmptyState
         <p>No papers match these filters.</p>
         <Link href="/" className="empty-state-link">
           Clear filters
+        </Link>
+      </div>
+    )
+  }
+
+  if (variant === 'nothing-saved') {
+    return (
+      <div className="empty-state">
+        <p>Nothing saved yet. Tap the bookmark on any paper to keep it here.</p>
+        <Link href="/" className="empty-state-link">
+          Browse the feed
         </Link>
       </div>
     )

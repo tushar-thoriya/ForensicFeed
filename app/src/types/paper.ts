@@ -17,6 +17,17 @@ export type ReadStatusValue = 'unread' | 'reading' | 'read' | 'archived'
 import type { Paper } from '@/lib/db/schema'
 export type PaperWithHighlight = Paper & { headline: string | null }
 
+// listRecentPapers / listSavedPapers always project per-paper user state via
+// LEFT JOIN on user_saves and read_status. Both flags are non-optional —
+// absent rows project to false, so consumers can read them directly without
+// null checks. `isRead` is true ONLY when read_status.status === 'read';
+// the schema's other enum values (`reading`, `archived`) count as not-read
+// in A6 (binary read UI; see A6-PRD.md).
+export type PaperWithUserState = PaperWithHighlight & {
+  isSaved: boolean
+  isRead: boolean
+}
+
 export interface NormalisedPaper {
   title: string
   authors: string[]

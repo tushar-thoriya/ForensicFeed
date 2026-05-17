@@ -1,8 +1,10 @@
-import type { PaperWithHighlight } from '@/types/paper'
+import type { PaperWithUserState } from '@/types/paper'
 import { renderHighlight } from '@/lib/search/render-highlight'
+import { SaveButton } from '@/components/paper-actions/SaveButton'
+import { ReadToggle } from '@/components/paper-actions/ReadToggle'
 
 interface PaperCardProps {
-  paper: PaperWithHighlight
+  paper: PaperWithUserState
 }
 
 function formatAuthors(authors: string[]): string {
@@ -27,7 +29,7 @@ const VENUE_TYPE_LABEL: Record<string, string> = {
   preprint: 'Preprint',
 }
 
-function venueLabel(paper: PaperWithHighlight): string {
+function venueLabel(paper: PaperWithUserState): string {
   if (paper.venue && paper.venue !== 'arXiv') return paper.venue
   return VENUE_TYPE_LABEL[paper.venueType] ?? paper.venueType
 }
@@ -41,7 +43,7 @@ function formatCitations(count: number): string {
   return `${count} ${count === 1 ? 'citation' : 'citations'}`
 }
 
-function resolvePaperHref(paper: PaperWithHighlight): string | null {
+function resolvePaperHref(paper: PaperWithUserState): string | null {
   if (paper.pdfUrl) return paper.pdfUrl
   if (paper.arxivId) return `https://arxiv.org/abs/${paper.arxivId}`
   return null
@@ -55,8 +57,10 @@ export function PaperCard({ paper }: PaperCardProps) {
       ? paper.citationCount
       : null
 
+  const cardClass = paper.isRead ? 'paper-card paper-card-read' : 'paper-card'
+
   return (
-    <article className="paper-card" aria-labelledby={titleId}>
+    <article className={cardClass} aria-labelledby={titleId}>
       <div className="paper-card-meta">
         <span>{formatDate(paper.publishedDate)}</span>
         <span className="paper-card-meta-dot paper-card-score">
@@ -109,6 +113,10 @@ export function PaperCard({ paper }: PaperCardProps) {
             <span className="sr-only"> (opens in new tab)</span>
           </a>
         ) : null}
+      </div>
+      <div className="paper-card-actions">
+        <SaveButton paperId={paper.id} initialSaved={paper.isSaved} />
+        <ReadToggle paperId={paper.id} initialRead={paper.isRead} />
       </div>
     </article>
   )
