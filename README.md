@@ -80,6 +80,31 @@ AI summaries (cost-capped Haiku), weekly email digest, related-papers panel, aut
 
 Excluded: paywalled venues without a preprint link (IEEE Xplore full-text, ACM DL full-text).
 
+### Changing ingestion schedules
+
+All cron schedules live in **one file** — no need to hunt through individual ingest files.
+
+**File:** [`app/config/schedules.ts`](app/config/schedules.ts)
+
+```ts
+export const SCHEDULES = {
+  arxiv:           PRESETS.DAILY_6AM,            // edit this →
+  huggingface:     PRESETS.DAILY_6_15AM,
+  semanticScholar: PRESETS.DAILY_6_30AM,
+  cvf:             PRESETS.WEEKLY_MONDAY_7AM,
+  openReview:      PRESETS.WEEKLY_MONDAY_7_30AM,
+} as const
+```
+
+**To change a job's cadence** (e.g. daily → weekly):
+1. Open `app/config/schedules.ts`
+2. Change the preset for that source (e.g. `DAILY_6AM` → `WEEKLY_MONDAY_6AM`), or write a raw cron string like `"0 6 * * 1"`
+3. Commit + push → Vercel deploys → Inngest auto-syncs the new schedule
+
+The file's header has a **cron syntax cheat-sheet** and a list of reusable presets — open it to see them.
+
+Test any cron expression at [crontab.guru](https://crontab.guru/) before committing.
+
 ---
 
 ## Design principles
@@ -98,6 +123,7 @@ ForensicFeed/
 ├── CLAUDE.md            # engineering playbook & quality gates
 ├── Ideas V4.md          # product spec: sources, taxonomy, schema
 ├── app/                 # Next.js application
+│   ├── config/          # editable runtime config (cron schedules, etc.)
 │   ├── docs/            # per-phase PRDs and plans (A0–A4 shipped)
 │   ├── src/
 │   │   ├── app/         # App Router pages + API routes

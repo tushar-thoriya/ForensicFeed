@@ -3,13 +3,14 @@ import { semanticScholarAdapter } from '@/lib/ingestion/adapters/semantic-schola
 import { runAdapter } from '@/lib/ingestion/run'
 import { getEnv } from '@/lib/env'
 import { ONE_DAY_MS, monthsAgo, parseIngestEvent } from '@/lib/inngest/utils'
+import { SCHEDULES } from '@config/schedules'
 
 export const ingestSemanticScholarDaily = inngest.createFunction(
   {
     id: 'ingest-semantic-scholar-daily',
     name: 'Daily Semantic Scholar ingest (image forgery)',
   },
-  { cron: '30 6 * * *' },
+  { cron: SCHEDULES.semanticScholar },
   async ({ step }) => {
     const now = new Date()
     const since = new Date(now.getTime() - ONE_DAY_MS * 2)

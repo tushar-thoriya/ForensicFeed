@@ -3,9 +3,7 @@ import { openReviewAdapter } from '@/lib/ingestion/adapters/openreview'
 import { runAdapter } from '@/lib/ingestion/run'
 import { getEnv } from '@/lib/env'
 import { ONE_DAY_MS, monthsAgo, parseIngestEvent } from '@/lib/inngest/utils'
-
-// Staggered 30 minutes after CVF to avoid bursting both adapters at once.
-const OPENREVIEW_CRON = '30 7 * * 1'
+import { SCHEDULES } from '@config/schedules'
 
 const DEFAULT_OPENREVIEW_VENUES = ['ICLR.cc/', 'NeurIPS.cc/']
 
@@ -24,7 +22,7 @@ export const ingestOpenReviewWeekly = inngest.createFunction(
     id: 'ingest-openreview-weekly',
     name: 'Weekly OpenReview ingest (image forgery)',
   },
-  { cron: OPENREVIEW_CRON },
+  { cron: SCHEDULES.openReview },
   async ({ step }) => {
     const now = new Date()
     const since = new Date(now.getTime() - ONE_DAY_MS * 14)

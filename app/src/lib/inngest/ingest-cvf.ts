@@ -3,10 +3,7 @@ import { cvfAdapter } from '@/lib/ingestion/adapters/cvf'
 import { runAdapter } from '@/lib/ingestion/run'
 import { getEnv } from '@/lib/env'
 import { ONE_DAY_MS, monthsAgo, parseIngestEvent } from '@/lib/inngest/utils'
-
-// Conference proceedings change once a year per venue, so a weekly cron is
-// generous. Monday 07:00 UTC keeps it well clear of the daily arXiv/HF/S2 jobs.
-const CVF_CRON = '0 7 * * 1'
+import { SCHEDULES } from '@config/schedules'
 
 // Default venue list — overridable via INGESTION_CVF_VENUES env var (CSV).
 const DEFAULT_CVF_VENUES = ['CVPR2024', 'ICCV2023', 'WACV2024']
@@ -26,7 +23,7 @@ export const ingestCvfWeekly = inngest.createFunction(
     id: 'ingest-cvf-weekly',
     name: 'Weekly CVF proceedings ingest (image forgery)',
   },
-  { cron: CVF_CRON },
+  { cron: SCHEDULES.cvf },
   async ({ step }) => {
     const now = new Date()
     // CVF papers don't change frequently — look back a generous window so a

@@ -3,13 +3,14 @@ import { huggingfaceAdapter } from '@/lib/ingestion/adapters/huggingface'
 import { runAdapter } from '@/lib/ingestion/run'
 import { getEnv } from '@/lib/env'
 import { ONE_DAY_MS, monthsAgo, parseIngestEvent } from '@/lib/inngest/utils'
+import { SCHEDULES } from '@config/schedules'
 
 export const ingestHuggingfaceDaily = inngest.createFunction(
   {
     id: 'ingest-huggingface-daily',
     name: 'Daily Hugging Face Papers ingest (image forgery)',
   },
-  { cron: '15 6 * * *' },
+  { cron: SCHEDULES.huggingface },
   async ({ step }) => {
     const now = new Date()
     const since = new Date(now.getTime() - ONE_DAY_MS * 2)

@@ -2,6 +2,7 @@ import { inngest } from '@/lib/inngest/client'
 import { arxivAdapter } from '@/lib/ingestion/adapters/arxiv'
 import { runAdapter } from '@/lib/ingestion/run'
 import { getEnv } from '@/lib/env'
+import { SCHEDULES } from '@config/schedules'
 
 const SIX_MONTH_MS = 1000 * 60 * 60 * 24 * 30 * 6
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
@@ -14,7 +15,7 @@ function monthsAgo(months: number, now: Date): Date {
 
 export const ingestArxivDaily = inngest.createFunction(
   { id: 'ingest-arxiv-daily', name: 'Daily arXiv ingest (image forgery)' },
-  { cron: '0 6 * * *' },
+  { cron: SCHEDULES.arxiv },
   async ({ step }) => {
     const env = getEnv()
     const now = new Date()
