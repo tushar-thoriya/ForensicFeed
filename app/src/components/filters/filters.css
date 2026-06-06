@@ -63,6 +63,7 @@
 .filter-radio-group {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-xs);
 }
 
@@ -83,6 +84,10 @@
   padding: var(--space-sm) 0;
   /* CLAUDE.md §8 mandates 44x44 touch targets */
   min-height: 44px;
+  /* Force shrink-wrap so the focus outline hugs the content instead of
+     stretching across the flex column. */
+  width: fit-content;
+  max-width: 100%;
   user-select: none;
 }
 

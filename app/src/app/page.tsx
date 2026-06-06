@@ -3,6 +3,7 @@ import type { PaperWithUserState } from '@/types/paper'
 import { PaperList } from '@/components/feed/PaperList'
 import { EmptyState } from '@/components/feed/EmptyState'
 import { FilterPanel } from '@/components/filters/FilterPanel'
+import { FilterChipsBar } from '@/components/filters/FilterChipsBar'
 import { SearchInput } from '@/components/search/SearchInput'
 import { FeedNav } from '@/components/nav/FeedNav'
 import { parseFilterParams, serialiseFilters } from '@/lib/filters/parse'
@@ -116,6 +117,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             </span>
             {!errorMessage && <span>{contextSuffix}</span>}
           </p>
+          {!errorMessage && <FilterChipsBar filters={filters} />}
         </header>
         {errorMessage ? (
           <div className="empty-state">

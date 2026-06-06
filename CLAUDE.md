@@ -1,7 +1,7 @@
 # CLAUDE.md — Research Paper Tracker: Image Forgery Detection & Localization
 
 > **Working title:** ForensicFeed (or TBD)
-> **Current phase:** A0 — Foundations & Planning
+> **Current phase:** A9 — E2E + a11y + Error/Empty States (A1–A8 shipped)
 > **Source of truth for product spec:** `Ideas V4.md`
 
 ---
@@ -764,5 +764,5 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-{RANDOM}' 
 
 ---
 
-*Last updated: 2026-04-19 | Phase: A0 | Decisions locked: desktop-first, 6-month seed, no AI summaries in Phase A, relevance threshold 0.2, newest-first sort, weekly conference ingestion*
-*Next action: Answer open questions in `Ideas V4.md §13`, then run `/prp-prd` to generate A0 PRD*
+*Last updated: 2026-05-31 | Phase: A9 | A1–A8 shipped (ingestion, filters, search, saves, paper detail, design pass, production deploy with Vercel + Supabase + Inngest). Decisions locked: desktop-first, 6-month seed, no AI summaries in Phase A, relevance threshold 0.2, newest-first sort, weekly conference ingestion*
+*Next action: Run `/prp-prd` to generate A9 PRD covering Playwright E2E (Chrome/Firefox/Safari), a11y sweep, and error/empty states. Phase A exits when A9 is green.*

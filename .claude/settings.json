@@ -18,12 +18,6 @@
       "Bash(rm:*)"
     ]
   },
-  "env": {
-    "PATH": "${workspaceFolder}/virtual_env/node_modules/.bin:${env:PATH}",
-    "PNPM_HOME": "${workspaceFolder}/virtual_env/bin",
-    "PNPM_STORE_DIR": "${workspaceFolder}/virtual_env/pnpm-store",
-    "npm_config_cache": "${workspaceFolder}/virtual_env/cache"
-  },
   "hooks": {
     "PreToolUse": [
       {

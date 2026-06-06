@@ -9,3 +9,5 @@ Thumbs.db
 
 # Helper files
 manual_trigger.txt
+.vercel
+.env*
