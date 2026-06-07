@@ -7,8 +7,10 @@ test.describe('filter sidebar (desktop)', () => {
     await page.goto('/')
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 
-    // Sidebar should be visible at >= 1100px
-    await expect(page.getByLabel('Filters', { exact: true })).toBeVisible()
+    // Sidebar should be visible at >= 1100px. Target the complementary
+    // landmark (the <aside>) specifically — the mobile filter <dialog> also
+    // carries the accessible name "Filters", so getByLabel would match both.
+    await expect(page.getByRole('complementary', { name: 'Filters' })).toBeVisible()
 
     // Click the "With code" radio in the Code availability section
     const codeRadio = page.getByLabel('With code')
