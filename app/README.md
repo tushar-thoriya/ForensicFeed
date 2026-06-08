@@ -7,7 +7,7 @@
 
 ## Status
 
-Phases shipped: **A1 → A7**. Up next: A8 (production deploy + CSP + monitoring).
+Phases shipped: **A1 → A9 — Phase A complete.** Live on Vercel + Supabase; tested across Chrome + desktop/mobile Safari; WCAG 2.1 AA clean on the main surfaces.
 
 | Capability                                                                                          | Where                                                                                        |
 | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -15,8 +15,10 @@ Phases shipped: **A1 → A7**. Up next: A8 (production deploy + CSP + monitoring
 | Relevance scoring + auto-tagging                                                                    | `src/lib/ingestion/tagger.ts`                                                                |
 | Filter sidebar with URL-as-state                                                                    | `src/components/filters/`                                                                    |
 | Full-text search (Postgres `tsvector` + GIN, ranked by `ts_rank_cd`, highlighted via `ts_headline`) | `src/components/search/`, `src/lib/search/`, `drizzle/migrations/0003_add_search_vector.sql` |
-| Save + read-status tracking (optimistic toggles, `/saved` view, inline dim)                         | `src/components/paper-actions/`, `src/app/saved/`, `src/lib/db/queries/saves.ts`             |
+| Save + read-status tracking (optimistic toggles, `/saved` view, de-emphasized read cards)           | `src/components/paper-actions/`, `src/app/saved/`, `src/lib/db/queries/saves.ts`             |
 | Paper detail page + editorial design pass (serif hero, mono meta, eyebrow masthead)                 | `src/app/papers/[id]/`, `src/components/paper-detail/`, `src/styles/tokens.css`              |
+| Designed failure screens (feed error boundary, paper 404)                                           | `src/app/error.tsx`, `src/app/papers/[id]/not-found.tsx`, `src/components/status/`           |
+| E2E + accessibility coverage (Playwright on 3 browsers, axe WCAG scans, keyboard pass)              | `tests/e2e/` (`a11y.spec.ts`, `failure-screens.spec.ts`, `paper-detail.spec.ts`)             |
 
 ## Quick start
 

@@ -20,13 +20,13 @@ Built so I never miss a paper that matters for OVD (Optically Variable Device) d
 
 ## Tech stack
 
-| Layer | Choice |
-|---|---|
-| Frontend | Next.js 15 App Router, TypeScript, CSS Modules with custom properties |
-| Database | Supabase Postgres + Drizzle ORM (jsonb tags, GIN-ready) |
-| Job queue | Inngest (managed durable cron) |
-| Testing | Vitest (unit) + Playwright (E2E) |
-| Hosting | Vercel + Supabase |
+| Layer     | Choice                                                                |
+| --------- | --------------------------------------------------------------------- |
+| Frontend  | Next.js 15 App Router, TypeScript, CSS Modules with custom properties |
+| Database  | Supabase Postgres + Drizzle ORM (jsonb tags, GIN-ready)               |
+| Job queue | Inngest (managed durable cron)                                        |
+| Testing   | Vitest (unit) + Playwright (E2E)                                      |
+| Hosting   | Vercel + Supabase                                                     |
 
 ---
 
@@ -50,17 +50,19 @@ See [`app/README.md`](app/README.md) for the full command reference and [`CLAUDE
 
 ### Phase A — Single-user MVP
 
-| Phase | Deliverable | Status |
-|---|---|---|
-| A1 | arXiv adapter + minimal feed | ✅ shipped |
-| A2 | HF Papers + Semantic Scholar adapters; multi-source dedup | ✅ shipped |
-| A3 | CVF + OpenReview conference adapters; venue-type badge | ✅ shipped |
-| A4 | Filter sidebar; URL-as-state; sort-by-relevance toggle | ✅ shipped |
-| A5 | Full-text search (Postgres `tsvector`) | ✅ shipped |
-| A6 | Save + read-status tracking; saved papers view | ✅ shipped |
-| A7 | Paper detail page; design pass | ✅ shipped |
-| A8 | Production deploy (Vercel + Supabase + CSP + monitoring) | next |
-| A9 | E2E coverage; a11y sweep; error/empty states | planned |
+| Phase | Deliverable                                                               | Status     |
+| ----- | ------------------------------------------------------------------------- | ---------- |
+| A1    | arXiv adapter + minimal feed                                              | ✅ shipped |
+| A2    | HF Papers + Semantic Scholar adapters; multi-source dedup                 | ✅ shipped |
+| A3    | CVF + OpenReview conference adapters; venue-type badge                    | ✅ shipped |
+| A4    | Filter sidebar; URL-as-state; sort-by-relevance toggle                    | ✅ shipped |
+| A5    | Full-text search (Postgres `tsvector`)                                    | ✅ shipped |
+| A6    | Save + read-status tracking; saved papers view                            | ✅ shipped |
+| A7    | Paper detail page; design pass                                            | ✅ shipped |
+| A8    | Production deploy (Vercel + Supabase + CSP + monitoring)                  | ✅ shipped |
+| A9    | E2E coverage (3 browsers); a11y sweep (axe + keyboard); error/404 screens | ✅ shipped |
+
+**Phase A complete** — live, tested across Chrome + desktop/mobile Safari, WCAG 2.1 AA clean on the main surfaces, with designed failure screens.
 
 ### Phase B — Enhancements
 
@@ -70,13 +72,13 @@ AI summaries (cost-capped Haiku), weekly email digest, related-papers panel, aut
 
 ## Sources tracked
 
-| Source | Schedule | Dedup key |
-|---|---|---|
-| arXiv (cs.CV, cs.CR) | Daily 06:00 UTC | `arxiv_id` |
-| Hugging Face Papers | Daily 06:15 UTC | `arxiv_id` → title hash |
-| Semantic Scholar | Daily 06:30 UTC + weekly citation refresh | S2 paper ID |
-| CVF (CVPR / ICCV / WACV) | Weekly Mon 07:00 UTC | Title hash |
-| OpenReview (ICLR / NeurIPS) | Weekly Mon 07:30 UTC | OpenReview ID |
+| Source                      | Schedule                                  | Dedup key               |
+| --------------------------- | ----------------------------------------- | ----------------------- |
+| arXiv (cs.CV, cs.CR)        | Daily 06:00 UTC                           | `arxiv_id`              |
+| Hugging Face Papers         | Daily 06:15 UTC                           | `arxiv_id` → title hash |
+| Semantic Scholar            | Daily 06:30 UTC + weekly citation refresh | S2 paper ID             |
+| CVF (CVPR / ICCV / WACV)    | Weekly Mon 07:00 UTC                      | Title hash              |
+| OpenReview (ICLR / NeurIPS) | Weekly Mon 07:30 UTC                      | OpenReview ID           |
 
 Excluded: paywalled venues without a preprint link (IEEE Xplore full-text, ACM DL full-text).
 
@@ -88,15 +90,16 @@ All cron schedules live in **one file** — no need to hunt through individual i
 
 ```ts
 export const SCHEDULES = {
-  arxiv:           PRESETS.DAILY_6AM,            // edit this →
-  huggingface:     PRESETS.DAILY_6_15AM,
+  arxiv: PRESETS.DAILY_6AM, // edit this →
+  huggingface: PRESETS.DAILY_6_15AM,
   semanticScholar: PRESETS.DAILY_6_30AM,
-  cvf:             PRESETS.WEEKLY_MONDAY_7AM,
-  openReview:      PRESETS.WEEKLY_MONDAY_7_30AM,
-} as const
+  cvf: PRESETS.WEEKLY_MONDAY_7AM,
+  openReview: PRESETS.WEEKLY_MONDAY_7_30AM,
+} as const;
 ```
 
 **To change a job's cadence** (e.g. daily → weekly):
+
 1. Open `app/config/schedules.ts`
 2. Change the preset for that source (e.g. `DAILY_6AM` → `WEEKLY_MONDAY_6AM`), or write a raw cron string like `"0 6 * * 1"`
 3. Commit + push → Vercel deploys → Inngest auto-syncs the new schedule
@@ -124,10 +127,10 @@ ForensicFeed/
 ├── Ideas V4.md          # product spec: sources, taxonomy, schema
 ├── app/                 # Next.js application
 │   ├── config/          # editable runtime config (cron schedules, etc.)
-│   ├── docs/            # per-phase PRDs and plans (A0–A4 shipped)
+│   ├── docs/            # per-phase PRDs and plans (A0–A9)
 │   ├── src/
 │   │   ├── app/         # App Router pages + API routes
-│   │   ├── components/  # feed, filters
+│   │   ├── components/  # feed, filters, search, paper-detail, paper-actions, status
 │   │   ├── lib/         # ingestion, db, filters, security
 │   │   └── types/
 │   └── tests/           # vitest unit + playwright e2e
