@@ -104,13 +104,10 @@ export default async function SavedPage({ searchParams }: SavedPageProps) {
           <p className="feed-eyebrow">your library</p>
           <h1 className="feed-title">Saved papers</h1>
           <p className="feed-subtitle">
-            Papers you bookmarked, most recently saved first. Filters and search compose with
-            this view.
+            Papers you bookmarked, most recently saved first. Filters and search compose with this
+            view.
           </p>
-          <SearchInput
-            initialValue={filters.searchQuery ?? ''}
-            resultStatusId={RESULT_STATUS_ID}
-          />
+          <SearchInput initialValue={filters.searchQuery ?? ''} resultStatusId={RESULT_STATUS_ID} />
           <p id={RESULT_STATUS_ID} className="feed-meta">
             <span aria-live="polite" role="status">
               {errorMessage ? 'connection issue' : liveCount}

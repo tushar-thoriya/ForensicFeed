@@ -120,9 +120,7 @@ describe('scoreRelevance', () => {
 
 describe('assignTags', () => {
   it('returns an empty array when no tag keywords match', () => {
-    expect(
-      assignTags({ title: 'Generic CV paper', abstract: 'Nothing relevant.' }),
-    ).toEqual([])
+    expect(assignTags({ title: 'Generic CV paper', abstract: 'Nothing relevant.' })).toEqual([])
   })
 
   it('assigns copy-move, localization, and document tags on a passport forgery paper', () => {

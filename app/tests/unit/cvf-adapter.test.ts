@@ -42,7 +42,9 @@ describe('parseCvfHtml', () => {
     const html = await loadFixture()
     const papers = parseCvfHtml(html, 'CVPR2024')
     for (const paper of papers) {
-      expect(paper.pdfUrl).toMatch(/^https:\/\/openaccess\.thecvf\.com\/content\/CVPR2024\/papers\//)
+      expect(paper.pdfUrl).toMatch(
+        /^https:\/\/openaccess\.thecvf\.com\/content\/CVPR2024\/papers\//,
+      )
     }
   })
 

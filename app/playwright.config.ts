@@ -11,7 +11,11 @@ export default defineConfig({
   // the first navigation while a route is still compiling); the retry runs
   // against the now-warm server.
   retries: process.env.CI ? 2 : 1,
-  workers: process.env.CI ? 1 : undefined,
+  // Cap local parallelism. The default (~half the CPU cores) runs many workers
+  // across 3 browser projects against a single local server + DB pool, which
+  // starves connections and times out navigations under load. 3 keeps the run
+  // fast while staying within the pool.
+  workers: process.env.CI ? 1 : 3,
   reporter: process.env.CI ? [['html'], ['github']] : 'list',
   use: {
     baseURL: 'http://localhost:3000',
@@ -19,10 +23,15 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'pnpm dev',
+    // Run E2E against a production build by default. Pre-compiled routes remove
+    // the `next dev` cold-compile races (waitForURL timeouts), and notFound()/
+    // error paths render through the real RootLayout — so <html lang> is present
+    // instead of Next's dev-only `__next_error__` shell. Set E2E_DEV=1 to test
+    // against `next dev` for fast local iteration.
+    command: process.env.E2E_DEV ? 'pnpm dev' : 'pnpm build && pnpm start',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 180_000,
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

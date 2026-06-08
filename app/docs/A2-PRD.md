@@ -53,42 +53,42 @@ Two new sources flow into the same feed alongside arXiv. The same paper is never
 
 ## Existing state (post-A1)
 
-| Piece | File | Status |
-|---|---|---|
-| `findExistingPaper` priority dedup | `src/lib/db/queries/papers.ts:10` | ✅ Done; no dedicated test |
-| `dedupKeyFor` / `titleHash` | `src/lib/ingestion/dedup.ts` | ✅ Done; no test |
-| `runAdapter` orchestrator | `src/lib/ingestion/run.ts` | ✅ Source-agnostic; works as-is |
-| `Adapter` interface | `src/lib/ingestion/types.ts` | ✅ `apiKey?: string \| null` already on `AdapterFetchOptions` |
-| Schema fields `codeUrl`, `citationCount` | `src/lib/db/schema.ts:64` | ✅ Already present |
-| `upsertPaper` "enrich, never null out" | `src/lib/db/queries/papers.ts:65` | ✅ Already correct for merging |
-| `paper_source` enum | `src/lib/db/schema.ts:22` | ✅ `paperswithcode`, `semantic_scholar` already enumerated |
-| `INGESTION_*` env vars | `src/lib/env.ts` | ⚠️ Add `INGESTION_PWC_MAX_RESULTS`, reuse `SEMANTIC_SCHOLAR_API_KEY` |
-| Inngest registration | `src/app/api/inngest/route.ts` | ⚠️ Append new functions |
+| Piece                                    | File                              | Status                                                               |
+| ---------------------------------------- | --------------------------------- | -------------------------------------------------------------------- |
+| `findExistingPaper` priority dedup       | `src/lib/db/queries/papers.ts:10` | ✅ Done; no dedicated test                                           |
+| `dedupKeyFor` / `titleHash`              | `src/lib/ingestion/dedup.ts`      | ✅ Done; no test                                                     |
+| `runAdapter` orchestrator                | `src/lib/ingestion/run.ts`        | ✅ Source-agnostic; works as-is                                      |
+| `Adapter` interface                      | `src/lib/ingestion/types.ts`      | ✅ `apiKey?: string \| null` already on `AdapterFetchOptions`        |
+| Schema fields `codeUrl`, `citationCount` | `src/lib/db/schema.ts:64`         | ✅ Already present                                                   |
+| `upsertPaper` "enrich, never null out"   | `src/lib/db/queries/papers.ts:65` | ✅ Already correct for merging                                       |
+| `paper_source` enum                      | `src/lib/db/schema.ts:22`         | ✅ `paperswithcode`, `semantic_scholar` already enumerated           |
+| `INGESTION_*` env vars                   | `src/lib/env.ts`                  | ⚠️ Add `INGESTION_PWC_MAX_RESULTS`, reuse `SEMANTIC_SCHOLAR_API_KEY` |
+| Inngest registration                     | `src/app/api/inngest/route.ts`    | ⚠️ Append new functions                                              |
 
 ## Deliverables
 
-| # | File | Purpose |
-|---|---|---|
-| 1 | `tests/unit/dedup.test.ts` (new) | Lock arxivId > doi > titleHash priority; titleHash determinism; normaliseTitle behavior. |
-| 2a | `src/lib/ingestion/code-url.ts` (new) | `extractCodeUrl(text)` GitHub URL regex utility. |
-| 2b | `tests/unit/code-url.test.ts` (new) | Unit tests: GitHub variants, ignored host noise, plain-text vs URL contexts. |
-| 2c | `tests/fixtures/huggingface-papers.json` (new) | Trimmed HF API response (real, captured 2026-04-25). |
-| 3 | `tests/unit/huggingface-adapter.test.ts` (new) | Parse + normalise; `since` filter; codeUrl extraction wired through. |
-| 4 | `src/lib/ingestion/adapters/huggingface.ts` (new) | HF Papers adapter. |
-| 4b | `src/lib/ingestion/adapters/arxiv.ts` (modified) | Wire `extractCodeUrl` on every parsed entry. |
-| 5 | `tests/fixtures/semantic-scholar.json` (new) | Captured S2 search response. |
-| 6 | `tests/unit/semantic-scholar-adapter.test.ts` (new) | Parse + normalise; pagination cursor; api-key header pass-through; missing-citations fallback. |
-| 7 | `src/lib/ingestion/adapters/semantic-scholar.ts` (new) | Adapter implementation. |
-| 8 | `src/lib/inngest/ingest-huggingface.ts` (new) | Daily cron + manual-trigger Inngest functions for HF. |
-| 9 | `src/lib/inngest/ingest-semantic-scholar.ts` (new) | Daily cron + manual-trigger Inngest functions for S2. |
-| 10 | `src/app/api/inngest/route.ts` (modified) | Register new Inngest functions. |
-| 11 | `src/app/api/ingest/huggingface/route.ts` (new) | `POST` → emits `ingest/huggingface.manual` Inngest event. |
-| 12 | `src/app/api/ingest/semantic-scholar/route.ts` (new) | `POST` → emits `ingest/semantic-scholar.manual` Inngest event. |
-| 12b | `src/lib/db/schema.ts` (modified) | Add `'huggingface'` to `paperSource` enum. |
-| 12c | `drizzle/0002_add_huggingface_source.sql` (new) | `ALTER TYPE paper_source ADD VALUE 'huggingface'`. |
-| 13 | `src/components/feed/PaperCard.tsx` (modified) | "code" link badge + citation chip. |
-| 14 | `src/components/feed/feed.css` (modified) | Styles for new badges, token-driven. |
-| 15 | `tests/unit/multi-source-dedup.test.ts` (new) | Integration test (mocked DB): three sources → one row, signals merged. |
+| #   | File                                                   | Purpose                                                                                        |
+| --- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| 1   | `tests/unit/dedup.test.ts` (new)                       | Lock arxivId > doi > titleHash priority; titleHash determinism; normaliseTitle behavior.       |
+| 2a  | `src/lib/ingestion/code-url.ts` (new)                  | `extractCodeUrl(text)` GitHub URL regex utility.                                               |
+| 2b  | `tests/unit/code-url.test.ts` (new)                    | Unit tests: GitHub variants, ignored host noise, plain-text vs URL contexts.                   |
+| 2c  | `tests/fixtures/huggingface-papers.json` (new)         | Trimmed HF API response (real, captured 2026-04-25).                                           |
+| 3   | `tests/unit/huggingface-adapter.test.ts` (new)         | Parse + normalise; `since` filter; codeUrl extraction wired through.                           |
+| 4   | `src/lib/ingestion/adapters/huggingface.ts` (new)      | HF Papers adapter.                                                                             |
+| 4b  | `src/lib/ingestion/adapters/arxiv.ts` (modified)       | Wire `extractCodeUrl` on every parsed entry.                                                   |
+| 5   | `tests/fixtures/semantic-scholar.json` (new)           | Captured S2 search response.                                                                   |
+| 6   | `tests/unit/semantic-scholar-adapter.test.ts` (new)    | Parse + normalise; pagination cursor; api-key header pass-through; missing-citations fallback. |
+| 7   | `src/lib/ingestion/adapters/semantic-scholar.ts` (new) | Adapter implementation.                                                                        |
+| 8   | `src/lib/inngest/ingest-huggingface.ts` (new)          | Daily cron + manual-trigger Inngest functions for HF.                                          |
+| 9   | `src/lib/inngest/ingest-semantic-scholar.ts` (new)     | Daily cron + manual-trigger Inngest functions for S2.                                          |
+| 10  | `src/app/api/inngest/route.ts` (modified)              | Register new Inngest functions.                                                                |
+| 11  | `src/app/api/ingest/huggingface/route.ts` (new)        | `POST` → emits `ingest/huggingface.manual` Inngest event.                                      |
+| 12  | `src/app/api/ingest/semantic-scholar/route.ts` (new)   | `POST` → emits `ingest/semantic-scholar.manual` Inngest event.                                 |
+| 12b | `src/lib/db/schema.ts` (modified)                      | Add `'huggingface'` to `paperSource` enum.                                                     |
+| 12c | `drizzle/0002_add_huggingface_source.sql` (new)        | `ALTER TYPE paper_source ADD VALUE 'huggingface'`.                                             |
+| 13  | `src/components/feed/PaperCard.tsx` (modified)         | "code" link badge + citation chip.                                                             |
+| 14  | `src/components/feed/feed.css` (modified)              | Styles for new badges, token-driven.                                                           |
+| 15  | `tests/unit/multi-source-dedup.test.ts` (new)          | Integration test (mocked DB): three sources → one row, signals merged.                         |
 
 ## Contracts
 

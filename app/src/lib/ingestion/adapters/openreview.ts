@@ -147,10 +147,7 @@ export function parseOpenReviewSearch(
   return out
 }
 
-async function fetchOnce(
-  query: string,
-  offset: number,
-): Promise<unknown> {
+async function fetchOnce(query: string, offset: number): Promise<unknown> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), OR_FETCH_TIMEOUT_MS)
 

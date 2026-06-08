@@ -17,7 +17,7 @@ A persistent search box above the feed. Typing narrows the feed to papers whose 
 
 - **`papers.search_vector` column** — `tsvector` generated from `title` + `abstract` (title weighted higher), via Postgres `GENERATED ALWAYS AS (...) STORED`. No trigger needed; column maintains itself on every row write.
 - **GIN index** on `search_vector` — `CREATE INDEX papers_search_idx ON papers USING gin(search_vector)`.
-- **Hand-written migration only** — `drizzle/migrations/0003_add_search_vector.sql`. **The column is NOT declared in `schema.ts`.** Postgres maintains it; the app references it via raw `sql\`search_vector\`` fragments inside the query builder (same pattern as A4's `jsonb ?|` tag-overlap operator at `list-papers-query.ts:31-38`). Reasons:
+- **Hand-written migration only** — `drizzle/migrations/0003_add_search_vector.sql`. **The column is NOT declared in `schema.ts`.** Postgres maintains it; the app references it via raw `sql\`search_vector\``fragments inside the query builder (same pattern as A4's`jsonb ?|`tag-overlap operator at`list-papers-query.ts:31-38`). Reasons:
   1. Declaring it would force `db.select()` to include `searchVector` in every row, bloating every Paper transfer with raw `tsvector` strings the app never uses.
   2. `Paper.$inferSelect` would gain a noisy `searchVector` field every consumer would have to ignore.
   3. drizzle-kit's introspection of generated columns is imperfect — keeping the migration authoritative avoids regenerate-time drift.
@@ -51,50 +51,50 @@ A persistent search box above the feed. Typing narrows the feed to papers whose 
 
 ## Existing state (post-A4, already in repo)
 
-| Piece | File | Status |
-|---|---|---|
-| `FilterState`, `EMPTY_FILTERS`, `isFiltered` | `src/types/filter.ts` | ✅ Extend `FilterState` with `searchQuery: string \| null` |
-| `parseFilterParams` / `serialiseFilters` | `src/lib/filters/parse.ts` | ✅ Extend to handle `q` |
-| `buildConditions`, `buildOrderBy`, `buildListPapersQuery` | `src/lib/db/queries/list-papers-query.ts` | ✅ Extend to add `@@` condition + flip default order |
-| `listRecentPapers` | `src/lib/db/queries/papers.ts` | ✅ Extend to select `ts_headline` excerpt when searching |
-| `FeedPage` server component | `src/app/page.tsx` | ✅ Reuse; SearchInput drops in above filters |
-| `FilterPanel` orchestrator | `src/components/filters/FilterPanel.tsx` | ✅ Reuse; SearchInput is sibling, not child |
-| `EmptyState` | `src/components/feed/EmptyState.tsx` | ✅ Extend with `no-search-matches` variant |
-| `PaperCard` | `src/components/feed/PaperCard.tsx` | ✅ Extend to accept optional `highlightedTitle`/`highlightedExcerpt` |
-| Drizzle migration runner | `src/lib/db/client.ts` + migration folder | ✅ Add `0002_add_search_vector.sql` |
-| Test infrastructure (Vitest + Playwright) | repo root | ✅ Reuse |
+| Piece                                                     | File                                      | Status                                                               |
+| --------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------- |
+| `FilterState`, `EMPTY_FILTERS`, `isFiltered`              | `src/types/filter.ts`                     | ✅ Extend `FilterState` with `searchQuery: string \| null`           |
+| `parseFilterParams` / `serialiseFilters`                  | `src/lib/filters/parse.ts`                | ✅ Extend to handle `q`                                              |
+| `buildConditions`, `buildOrderBy`, `buildListPapersQuery` | `src/lib/db/queries/list-papers-query.ts` | ✅ Extend to add `@@` condition + flip default order                 |
+| `listRecentPapers`                                        | `src/lib/db/queries/papers.ts`            | ✅ Extend to select `ts_headline` excerpt when searching             |
+| `FeedPage` server component                               | `src/app/page.tsx`                        | ✅ Reuse; SearchInput drops in above filters                         |
+| `FilterPanel` orchestrator                                | `src/components/filters/FilterPanel.tsx`  | ✅ Reuse; SearchInput is sibling, not child                          |
+| `EmptyState`                                              | `src/components/feed/EmptyState.tsx`      | ✅ Extend with `no-search-matches` variant                           |
+| `PaperCard`                                               | `src/components/feed/PaperCard.tsx`       | ✅ Extend to accept optional `highlightedTitle`/`highlightedExcerpt` |
+| Drizzle migration runner                                  | `src/lib/db/client.ts` + migration folder | ✅ Add `0002_add_search_vector.sql`                                  |
+| Test infrastructure (Vitest + Playwright)                 | repo root                                 | ✅ Reuse                                                             |
 
 ## Deliverables
 
-| # | File | Purpose |
-|---|---|---|
-| 1 | `drizzle/migrations/0003_add_search_vector.sql` (new) | Add `search_vector` generated column + GIN index. |
-| 2 | `src/lib/db/schema.ts` | **No change.** Column is intentionally NOT declared in drizzle schema (see scope §1). All references go through raw `sql\`search_vector\`` in the query builder. |
-| 3 | `src/types/filter.ts` (modified) | Add `searchQuery: string \| null` to `FilterState`; change `SortBy` to tri-state `'newest' \| 'relevance' \| null`; update `EMPTY_FILTERS.sortBy = null`; update `isFiltered` to include `searchQuery !== null`. |
-| 4 | `src/lib/search/parse-query.ts` (new) | `parseSearchQuery(raw: string \| null) → string \| null`. Trims, collapses whitespace, returns null for empty. |
-| 5 | `src/lib/filters/parse.ts` (modified) | `parseFilterParams` reads `q`; `serialiseFilters` writes `q`. |
-| 6 | `src/lib/db/queries/list-papers-query.ts` (modified) | `buildConditions` AND-s `search_vector @@ websearch_to_tsquery(...)` when searching. `buildOrderBy` flips default to `ts_rank_cd` desc when searching with no explicit sort. |
-| 7 | `src/lib/db/queries/papers.ts` (modified) | `listRecentPapers` returns `PaperWithHighlight[]` always; when searching, the `headline` field is populated via `ts_headline`; otherwise `headline: null`. Use `db.select({ ...paperColumns, headline: sql<string | null>... }).from(papers)` so the inferred return type is stable across both code paths. |
-| 8 | `src/types/paper.ts` (modified) | Add `PaperWithHighlight = Paper & { headline: string \| null }` (non-optional — always present, null when not searching, so consumers can assume the field exists). |
-| 8a | `src/app/page.tsx` + `src/components/feed/PaperList.tsx` + any test fixtures (modified) | Change `Paper[]` annotations to `PaperWithHighlight[]` wherever they appear as the return-type of `listRecentPapers`. |
-| 9 | `src/lib/search/render-highlight.tsx` (new) | Pure helper that splits headline string on `⟦HL⟧` / `⟦/HL⟧` sentinels and returns a React fragment with `<mark>` wrappers. No HTML parsing. |
-| 10 | `src/components/search/SearchInput.tsx` (new) | Controlled `<input type="search">` with `useTransition`-debounced URL sync. Clear button, `Escape`-to-clear. |
-| 11 | `src/components/search/search.css` (new) | Search input layout, focus ring, clear-button placement, `<mark>` styling. |
-| 12 | `src/components/feed/PaperCard.tsx` (modified) | Accept optional `highlightedTitle` / `highlightedExcerpt` ReactNode; fall back to plain title/abstract. |
-| 13 | `src/components/feed/EmptyState.tsx` (modified) | Add `no-search-matches` variant with `query` prop and "Clear search" link. |
-| 14 | `src/app/page.tsx` (modified) | Render `<SearchInput>` above the feed-header; pass to `listRecentPapers`; pick empty-state variant based on whether `searchQuery !== null`. |
-| 15 | `tests/unit/parse-query.test.ts` (new) | Empty / whitespace / huge / unicode / SQL-injection-attempt inputs all yield safe normalised output. |
-| 16 | `tests/unit/filter-parse.test.ts` (modified) | Add cases for `q` round-trip + empty `q` dropped. |
-| 17 | `tests/unit/list-papers.test.ts` (modified) | Extended assertions: `@@` appears only with `searchQuery`; `ts_rank_cd` appears in ORDER BY only when searching with no explicit sort. |
-| 18 | `tests/unit/render-highlight.test.tsx` (new) | Sentinel splitting; no-match passes through; nested sentinels (invalid input) degrade gracefully. |
-| 19 | `tests/e2e/search.spec.ts` (new) | Type "forgery", wait for `?q=forgery`, expect result count change, expect `<mark>`, `Escape` to clear. |
+| #   | File                                                                                    | Purpose                                                                                                                                                                                                           |
+| --- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 1   | `drizzle/migrations/0003_add_search_vector.sql` (new)                                   | Add `search_vector` generated column + GIN index.                                                                                                                                                                 |
+| 2   | `src/lib/db/schema.ts`                                                                  | **No change.** Column is intentionally NOT declared in drizzle schema (see scope §1). All references go through raw `sql\`search_vector\`` in the query builder.                                                  |
+| 3   | `src/types/filter.ts` (modified)                                                        | Add `searchQuery: string \| null` to `FilterState`; change `SortBy` to tri-state `'newest' \| 'relevance' \| null`; update `EMPTY_FILTERS.sortBy = null`; update `isFiltered` to include `searchQuery !== null`.  |
+| 4   | `src/lib/search/parse-query.ts` (new)                                                   | `parseSearchQuery(raw: string \| null) → string \| null`. Trims, collapses whitespace, returns null for empty.                                                                                                    |
+| 5   | `src/lib/filters/parse.ts` (modified)                                                   | `parseFilterParams` reads `q`; `serialiseFilters` writes `q`.                                                                                                                                                     |
+| 6   | `src/lib/db/queries/list-papers-query.ts` (modified)                                    | `buildConditions` AND-s `search_vector @@ websearch_to_tsquery(...)` when searching. `buildOrderBy` flips default to `ts_rank_cd` desc when searching with no explicit sort.                                      |
+| 7   | `src/lib/db/queries/papers.ts` (modified)                                               | `listRecentPapers` returns `PaperWithHighlight[]` always; when searching, the `headline` field is populated via `ts_headline`; otherwise `headline: null`. Use `db.select({ ...paperColumns, headline: sql<string | null>... }).from(papers)` so the inferred return type is stable across both code paths. |
+| 8   | `src/types/paper.ts` (modified)                                                         | Add `PaperWithHighlight = Paper & { headline: string \| null }` (non-optional — always present, null when not searching, so consumers can assume the field exists).                                               |
+| 8a  | `src/app/page.tsx` + `src/components/feed/PaperList.tsx` + any test fixtures (modified) | Change `Paper[]` annotations to `PaperWithHighlight[]` wherever they appear as the return-type of `listRecentPapers`.                                                                                             |
+| 9   | `src/lib/search/render-highlight.tsx` (new)                                             | Pure helper that splits headline string on `⟦HL⟧` / `⟦/HL⟧` sentinels and returns a React fragment with `<mark>` wrappers. No HTML parsing.                                                                       |
+| 10  | `src/components/search/SearchInput.tsx` (new)                                           | Controlled `<input type="search">` with `useTransition`-debounced URL sync. Clear button, `Escape`-to-clear.                                                                                                      |
+| 11  | `src/components/search/search.css` (new)                                                | Search input layout, focus ring, clear-button placement, `<mark>` styling.                                                                                                                                        |
+| 12  | `src/components/feed/PaperCard.tsx` (modified)                                          | Accept optional `highlightedTitle` / `highlightedExcerpt` ReactNode; fall back to plain title/abstract.                                                                                                           |
+| 13  | `src/components/feed/EmptyState.tsx` (modified)                                         | Add `no-search-matches` variant with `query` prop and "Clear search" link.                                                                                                                                        |
+| 14  | `src/app/page.tsx` (modified)                                                           | Render `<SearchInput>` above the feed-header; pass to `listRecentPapers`; pick empty-state variant based on whether `searchQuery !== null`.                                                                       |
+| 15  | `tests/unit/parse-query.test.ts` (new)                                                  | Empty / whitespace / huge / unicode / SQL-injection-attempt inputs all yield safe normalised output.                                                                                                              |
+| 16  | `tests/unit/filter-parse.test.ts` (modified)                                            | Add cases for `q` round-trip + empty `q` dropped.                                                                                                                                                                 |
+| 17  | `tests/unit/list-papers.test.ts` (modified)                                             | Extended assertions: `@@` appears only with `searchQuery`; `ts_rank_cd` appears in ORDER BY only when searching with no explicit sort.                                                                            |
+| 18  | `tests/unit/render-highlight.test.tsx` (new)                                            | Sentinel splitting; no-match passes through; nested sentinels (invalid input) degrade gracefully.                                                                                                                 |
+| 19  | `tests/e2e/search.spec.ts` (new)                                                        | Type "forgery", wait for `?q=forgery`, expect result count change, expect `<mark>`, `Escape` to clear.                                                                                                            |
 
 ## Contracts
 
 ### `FilterState` extension
 
 ```typescript
-type SortBy = 'newest' | 'relevance' | null   // tri-state: null = no explicit sort param
+type SortBy = 'newest' | 'relevance' | null // tri-state: null = no explicit sort param
 
 interface FilterState {
   sources: PaperSource[]
@@ -103,7 +103,7 @@ interface FilterState {
   tags: Tag[]
   hasCode: boolean | null
   sortBy: SortBy
-  searchQuery: string | null   // NEW — null when input is empty
+  searchQuery: string | null // NEW — null when input is empty
 }
 ```
 
@@ -113,9 +113,9 @@ interface FilterState {
 
 ### URL contract
 
-| Param | Format | Example |
-|---|---|---|
-| `q` | URL-encoded raw user string | `?q=copy-move+localization` |
+| Param | Format                      | Example                     |
+| ----- | --------------------------- | --------------------------- |
+| `q`   | URL-encoded raw user string | `?q=copy-move+localization` |
 
 - Whitespace-only or empty `q` is dropped on serialise — `?q=&tag=foo` round-trips to `?tag=foo`, never `?q=`.
 - `parseSearchQuery` normalises:
@@ -129,16 +129,16 @@ interface FilterState {
 export function parseSearchQuery(raw: string | null | undefined): string | null
 ```
 
-| Input | Output |
-|---|---|
-| `null` / `undefined` | `null` |
-| `""` | `null` |
-| `"   "` | `null` |
-| `"copy-move"` | `"copy-move"` |
-| `"  copy  move  "` | `"copy move"` |
-| 250-char string | first 200 chars after trim |
+| Input                        | Output                                                                                                                                           |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `null` / `undefined`         | `null`                                                                                                                                           |
+| `""`                         | `null`                                                                                                                                           |
+| `"   "`                      | `null`                                                                                                                                           |
+| `"copy-move"`                | `"copy-move"`                                                                                                                                    |
+| `"  copy  move  "`           | `"copy move"`                                                                                                                                    |
+| 250-char string              | first 200 chars after trim                                                                                                                       |
 | `"'); DROP TABLE papers;--"` | `"'); DROP TABLE papers;--"` (no escaping needed — passed as bind param to `websearch_to_tsquery`, which is grammar-only and ignores SQL syntax) |
-| Unicode `"déjà vu"` | `"déjà vu"` (Postgres `english` config tokenises ASCII; non-ASCII passes through as a literal token — no match but no crash) |
+| Unicode `"déjà vu"`          | `"déjà vu"` (Postgres `english` config tokenises ASCII; non-ASCII passes through as a literal token — no match but no crash)                     |
 
 ### Extended `listRecentPapers` signature
 
@@ -171,6 +171,7 @@ export async function listRecentPapers(options: ListOptions = {}): Promise<Paper
 `renderHighlight(text)` returns React: `<>…copy-move <mark>localization</mark> in deepfake images…</>`.
 
 Algorithm:
+
 1. Split on a single regex covering both sentinels: `/[\x02\x03]/`.
 2. Walk segments tracking "are we inside a highlight" via a flag toggled on each split boundary (since splitting on the regex consumes both delimiters, we toggle on every chunk; this works because `\x02` always precedes a highlight and `\x03` always closes one — but we use a simpler robust form: split into pairs around `\x02...\x03`).
 3. Final algorithm (robust):
@@ -255,11 +256,11 @@ CREATE INDEX papers_search_idx ON papers USING gin(search_vector);
 - **`ts_headline` is moderately expensive** — runs per returned row. With `limit 50` and an indexed search, total cost is small. If perf surfaces an issue, move `ts_headline` into a second query that only fetches headlines for visible rows, or precompute snippets at ingest. For A5: ship simple.
 - **Sentinel choice** — `\x02` (STX) and `\x03` (ETX) ASCII control characters. Categorically impossible in any real published paper: PDF text extraction strips control chars, XML and JSON parsers reject them, every ingestion adapter we use produces text via one of these paths. Postgres preserves them as bytes in `text` columns regardless. Initial PRD draft used printable Unicode brackets `⟦`/`⟧` (U+27E6/U+27E7) but architect review flagged these as real codepoints that a math-heavy abstract could legitimately contain. Control chars are structurally safer.
 - **`websearch_to_tsquery` error tolerance** — unlike `to_tsquery`, it never throws on bad syntax. Verified in Postgres docs. This is why we use it instead of `plainto_tsquery` (which also doesn't throw but doesn't support phrases / exclusion).
-- **Highlight in already-highlighted text** — `ts_headline` only operates on the *input* string; we pass title + abstract concatenated. The card UI then renders that headline next to (or instead of) the original title. To avoid visual confusion, when `headline` is present we render it in the **abstract slot only**, keeping the plain title in the title slot. Title-only highlighting can be added later if useful.
+- **Highlight in already-highlighted text** — `ts_headline` only operates on the _input_ string; we pass title + abstract concatenated. The card UI then renders that headline next to (or instead of) the original title. To avoid visual confusion, when `headline` is present we render it in the **abstract slot only**, keeping the plain title in the title slot. Title-only highlighting can be added later if useful.
 - **Debounce vs `useTransition`** — `useTransition` alone is not a debounce; it just marks the update as low-priority. We still need a `setTimeout`-based debounce for the URL push, otherwise every keystroke is a Next.js navigation. Use both: debounce the navigation, transition the resulting re-render.
 - **Enter / Clear race vs debounce timer** — every code path that calls `router.push` or `router.replace` outside the debounce timer (Enter, clear button, Escape) MUST `clearTimeout(timerRef.current)` BEFORE the navigation call. Otherwise a queued debounce timer can fire after the immediate navigation and silently replace the just-created history entry. Cover this with a focused unit test if practical (timer mocking with `vi.useFakeTimers`).
 - **Tri-state sort migration** — A4 stored `sortBy: 'newest' | 'relevance'` with `'newest'` as the default. Changing to `'newest' | 'relevance' | null` with `null` as default is a small breaking change. `pnpm typecheck` will catch all call sites (page.tsx sort indicator, FilterSidebar radio, FilterChips display, serialiseFilters). For radio display, treat `null` and `'newest'` identically (default visual). For chips display, only show a "Sort: relevance" chip when `sortBy === 'relevance'` — `null` and `'newest'` produce no chip.
-- **`searchVector` not in drizzle schema** — accessed only via raw `sql\`search_vector\`` in `list-papers-query.ts`. This is intentional (avoids bloating `Paper.$inferSelect`). The cost is that drizzle-kit's introspection diff for this table will show a "column not in schema" warning. Document this in the migration comment so future-us doesn't try to "fix" it.
+- **`searchVector` not in drizzle schema** — accessed only via raw `sql\`search_vector\``in`list-papers-query.ts`. This is intentional (avoids bloating `Paper.$inferSelect`). The cost is that drizzle-kit's introspection diff for this table will show a "column not in schema" warning. Document this in the migration comment so future-us doesn't try to "fix" it.
 - **`router.replace` clobbers in-page state** — feed is server-component-rendered, no in-page client state to lose. Safe. If we later add client-side pagination or scroll restoration, revisit.
 - **Migration generation** — drizzle-kit can't introspect generated columns cleanly. Hand-write `0002_add_search_vector.sql` and run via the existing migration path (or directly via `supabase migration up`). Add a `db:generate` skip-marker so drizzle-kit doesn't try to revert it on next generation.
 - **Test infra for tsvector** — unit tests for the compiled SQL string (via `PgDialect.sqlToQuery` as in A4) verify shape without touching a DB. Integration test requires a live Postgres with the migration applied; out of scope for unit, in scope for the E2E test which uses the dev DB.

@@ -9,10 +9,7 @@ export interface RunAdapterOptions {
   venues?: string[]
 }
 
-export async function runAdapter(
-  adapter: Adapter,
-  options: RunAdapterOptions,
-): Promise<RunResult> {
+export async function runAdapter(adapter: Adapter, options: RunAdapterOptions): Promise<RunResult> {
   const now = options.now ?? new Date()
   const startedAt = new Date()
   const runId = await startRun(adapter.source)

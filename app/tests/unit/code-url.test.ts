@@ -10,18 +10,18 @@ describe('extractCodeUrl', () => {
   })
 
   it('extracts a plain GitHub repo URL', () => {
-    expect(
-      extractCodeUrl('Code is available at https://github.com/foo/bar.'),
-    ).toBe('https://github.com/foo/bar')
+    expect(extractCodeUrl('Code is available at https://github.com/foo/bar.')).toBe(
+      'https://github.com/foo/bar',
+    )
   })
 
   it('handles trailing punctuation cleanly', () => {
-    expect(
-      extractCodeUrl('Repo: https://github.com/foo/bar, see paper for details.'),
-    ).toBe('https://github.com/foo/bar')
-    expect(
-      extractCodeUrl('See https://github.com/foo/bar) for our implementation.'),
-    ).toBe('https://github.com/foo/bar')
+    expect(extractCodeUrl('Repo: https://github.com/foo/bar, see paper for details.')).toBe(
+      'https://github.com/foo/bar',
+    )
+    expect(extractCodeUrl('See https://github.com/foo/bar) for our implementation.')).toBe(
+      'https://github.com/foo/bar',
+    )
   })
 
   it('strips a trailing .git suffix', () => {
@@ -44,17 +44,13 @@ describe('extractCodeUrl', () => {
 
   it('returns the first match when multiple repos appear', () => {
     expect(
-      extractCodeUrl(
-        'Two repos: https://github.com/foo/first and https://github.com/bar/second.',
-      ),
+      extractCodeUrl('Two repos: https://github.com/foo/first and https://github.com/bar/second.'),
     ).toBe('https://github.com/foo/first')
   })
 
   it('returns null when no GitHub URL is present', () => {
     expect(extractCodeUrl('No code is provided in this paper.')).toBeNull()
-    expect(
-      extractCodeUrl('Visit https://example.com/foo/bar for the dataset'),
-    ).toBeNull()
+    expect(extractCodeUrl('Visit https://example.com/foo/bar for the dataset')).toBeNull()
   })
 
   it('accepts http and trims www', () => {

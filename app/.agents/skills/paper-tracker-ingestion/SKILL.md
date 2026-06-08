@@ -31,6 +31,7 @@ export interface Adapter {
 ```
 
 Rules for every adapter:
+
 1. **Pure**: given the same options, return the same papers (ignoring upstream changes). No hidden state.
 2. **`since`-aware**: filter out papers published before `options.since`.
 3. **`maxResults` respected**: cap pagination.
@@ -43,6 +44,7 @@ Rules for every adapter:
 ## Per-source notes
 
 ### arXiv
+
 - Endpoint: `http://export.arxiv.org/api/query`
 - Query: `search_query=cat:cs.CV+OR+cat:cs.CR` plus keyword OR-clauses from `Ideas V4.md §12`.
 - Sort: `sortBy=submittedDate&sortOrder=descending`.
@@ -52,12 +54,14 @@ Rules for every adapter:
 - Rate limit: be polite — max 1 req/3s.
 
 ### Papers With Code
+
 - Endpoint: `https://paperswithcode.com/api/v1/`
 - Strategy: query the "image-forgery-detection" task area and supplement with keyword searches.
 - Useful fields: `code_url`, `methods`, `datasets`, linked `arxiv_id`.
 - Dedup key: `arxivId` when present, else title hash.
 
 ### Semantic Scholar
+
 - Endpoint: `https://api.semanticscholar.org/graph/v1/paper/search`
 - Auth: optional `x-api-key` header from `SEMANTIC_SCHOLAR_API_KEY` (higher rate limits).
 - Query strategy: keyword search daily; separate weekly job to refresh citation counts on already-stored papers.
@@ -65,6 +69,7 @@ Rules for every adapter:
 - Dedup key: `arxivId` → `doi` → S2 paper ID (fallback).
 
 ### CVF (CVPR / ICCV / WACV)
+
 - Source: proceedings index pages at `https://openaccess.thecvf.com/`.
 - Method: scrape with `cheerio`; filter by keyword in title before fetching detail pages.
 - Cadence: weekly.
@@ -72,6 +77,7 @@ Rules for every adapter:
 - Dedup key: title hash.
 
 ### OpenReview (ICLR / NeurIPS)
+
 - Endpoint: `https://api.openreview.net/notes`.
 - Query by `invitation` for the venue's submissions.
 - Useful fields: title, abstract, authors, PDF URL, decision.
@@ -88,6 +94,7 @@ Implemented in `src/lib/ingestion/dedup.ts`. Precedence:
 3. else `titleHash = sha256(normalize(title))` — lowercase + collapse whitespace + strip punctuation.
 
 On conflict with an existing row:
+
 - Merge upward: update `citationCount`, `codeUrl`, `updatedDate`, `rawMetadata` (shallow merge).
 - Never overwrite `publishedDate` or `primarySource`.
 - Re-compute `relevanceScore` + `relevanceTags` if the scorer version has changed (see `paper-tracker-relevance` skill).
@@ -104,12 +111,12 @@ See the `paper-tracker-relevance` skill for scoring rules.
 
 ## Orchestration (Inngest)
 
-| Job | Schedule (UTC) | Adapters |
-|---|---|---|
-| `ingest/arxiv.daily` | `0 6 * * *` | arXiv |
-| `ingest/pwc-s2.daily` | `0 7 * * *` | Papers With Code, Semantic Scholar |
-| `ingest/conferences.weekly` | `0 8 * * 1` (Mondays) | CVF, OpenReview |
-| `ingest/citations.weekly` | `0 9 * * 3` (Wednesdays) | Semantic Scholar refresh |
+| Job                         | Schedule (UTC)           | Adapters                           |
+| --------------------------- | ------------------------ | ---------------------------------- |
+| `ingest/arxiv.daily`        | `0 6 * * *`              | arXiv                              |
+| `ingest/pwc-s2.daily`       | `0 7 * * *`              | Papers With Code, Semantic Scholar |
+| `ingest/conferences.weekly` | `0 8 * * 1` (Mondays)    | CVF, OpenReview                    |
+| `ingest/citations.weekly`   | `0 9 * * 3` (Wednesdays) | Semantic Scholar refresh           |
 
 Each scheduled job opens an `ingest_runs` row per source:
 

@@ -39,7 +39,9 @@ describe('ReadToggle', () => {
     const { getByRole } = render(<ReadToggle paperId="arxiv:9" initialRead={false} />)
     const checkbox = getByRole('checkbox') as HTMLInputElement
     fireEvent.click(checkbox)
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalledWith('/api/read-status', expect.any(Object)))
+    await waitFor(() =>
+      expect(fetchSpy).toHaveBeenCalledWith('/api/read-status', expect.any(Object)),
+    )
     const body = JSON.parse((fetchSpy.mock.calls[0]?.[1] as RequestInit).body as string)
     expect(body).toEqual({ paperId: 'arxiv:9', status: 'read' })
   })

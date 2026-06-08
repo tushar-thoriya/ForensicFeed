@@ -8,25 +8,26 @@
 
 ### Phase 1 — Migration (no schema.ts change)
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 1.1 | Hand-write migration: `search_vector` generated column + GIN index | `drizzle/migrations/0003_add_search_vector.sql` (new) | Runs cleanly on local dev DB; `SELECT search_vector FROM papers LIMIT 1` returns non-null for rows with title/abstract |
-| 1.2 | Apply migration to dev DB via the existing drizzle-kit / supabase pipeline | (CLI step) | Migration recorded in `drizzle/meta/_journal.json` |
-| 1.3 | Verify backfill: `SELECT count(*) FROM papers WHERE search_vector IS NULL` | (manual SQL via Supabase Studio or psql) | Returns 0 (generated columns backfill automatically on `ALTER ADD COLUMN`) |
-| 1.4 | Verify GIN index usage: `EXPLAIN SELECT * FROM papers WHERE search_vector @@ websearch_to_tsquery('english', 'forgery')` | (manual SQL) | Plan shows `Bitmap Index Scan on papers_search_idx` |
+| Step | Task                                                                                                                     | File                                                  | Gate                                                                                                                   |
+| ---- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 1.1  | Hand-write migration: `search_vector` generated column + GIN index                                                       | `drizzle/migrations/0003_add_search_vector.sql` (new) | Runs cleanly on local dev DB; `SELECT search_vector FROM papers LIMIT 1` returns non-null for rows with title/abstract |
+| 1.2  | Apply migration to dev DB via the existing drizzle-kit / supabase pipeline                                               | (CLI step)                                            | Migration recorded in `drizzle/meta/_journal.json`                                                                     |
+| 1.3  | Verify backfill: `SELECT count(*) FROM papers WHERE search_vector IS NULL`                                               | (manual SQL via Supabase Studio or psql)              | Returns 0 (generated columns backfill automatically on `ALTER ADD COLUMN`)                                             |
+| 1.4  | Verify GIN index usage: `EXPLAIN SELECT * FROM papers WHERE search_vector @@ websearch_to_tsquery('english', 'forgery')` | (manual SQL)                                          | Plan shows `Bitmap Index Scan on papers_search_idx`                                                                    |
 
-**Decision: do NOT declare `searchVector` in `schema.ts`.** Per architect review issue #6, declaring it would force every `db.select()` to fetch the column (bloating `Paper` rows with raw `tsvector` strings the app never uses) and would pollute `Paper.$inferSelect` with a noisy field. All references go through raw `sql\`search_vector\`` fragments in `list-papers-query.ts`, identical to A4's `tagOverlapCondition` pattern. The migration file is the authoritative source for the column's existence.
+**Decision: do NOT declare `searchVector` in `schema.ts`.** Per architect review issue #6, declaring it would force every `db.select()` to fetch the column (bloating `Paper` rows with raw `tsvector` strings the app never uses) and would pollute `Paper.$inferSelect` with a noisy field. All references go through raw `sql\`search_vector\``fragments in`list-papers-query.ts`, identical to A4's `tagOverlapCondition` pattern. The migration file is the authoritative source for the column's existence.
 
 Add a comment at the top of `0002_add_search_vector.sql` noting: "Column intentionally NOT declared in drizzle schema — see A5-PRD.md scope. Do not delete it if drizzle-kit suggests doing so during introspection."
 
 ### Phase 2 — Query parser (TDD)
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 2.1 | Write `parseSearchQuery` unit tests (RED) | `tests/unit/parse-query.test.ts` (new) | Tests fail — function doesn't exist |
-| 2.2 | Implement `parseSearchQuery` | `src/lib/search/parse-query.ts` (new) | All cases green |
+| Step | Task                                      | File                                   | Gate                                |
+| ---- | ----------------------------------------- | -------------------------------------- | ----------------------------------- |
+| 2.1  | Write `parseSearchQuery` unit tests (RED) | `tests/unit/parse-query.test.ts` (new) | Tests fail — function doesn't exist |
+| 2.2  | Implement `parseSearchQuery`              | `src/lib/search/parse-query.ts` (new)  | All cases green                     |
 
 **Test cases** (2.1, ~10 cases):
+
 - `null` → `null`
 - `undefined` → `null`
 - `''` → `null`
@@ -41,16 +42,17 @@ Add a comment at the top of `0002_add_search_vector.sql` noting: "Column intenti
 
 ### Phase 3 — Extend FilterState + URL parser (TDD)
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 3.1 | Change `SortBy` to tri-state `'newest' \| 'relevance' \| null`; add `searchQuery: string \| null`; update `EMPTY_FILTERS` (`sortBy: null, searchQuery: null`); update `isFiltered` | `src/types/filter.ts` (modify) | `pnpm typecheck` reveals all call sites needing update |
-| 3.2 | Update every `FilterState`-typed object literal in tests + code; update `parseFilterParams` sort logic (absent param → `null`, `'newest'` → `'newest'`, `'relevance'` → `'relevance'`, junk → `null`); update `serialiseFilters` sort logic (`null` and `'newest'` both omit `sort` param? or only `null` omits? — decide: **`null` omits, explicit `'newest'` writes `sort=newest`** to preserve user intent in URL) | (multiple files) | Build green |
-| 3.3 | Extend `parseFilterParams` + `serialiseFilters` for `q` | `src/lib/filters/parse.ts` (modify) | New round-trip cases below |
-| 3.4 | Update FilterSidebar sort radio: when `sortBy === null` or `'newest'`, "Newest" radio is selected; clicking "Newest" sets `sortBy = 'newest'` (explicit) | `src/components/filters/FilterSidebar.tsx` (modify) | Radio behaviour visible in dev |
-| 3.5 | Update FilterChips: "Sort: relevance" chip only when `sortBy === 'relevance'`; no chip for `null` or `'newest'` | `src/components/filters/FilterChips.tsx` (modify) | Chips render |
-| 3.6 | Add `q` + tri-state sort cases to existing parser test | `tests/unit/filter-parse.test.ts` (modify) | Green |
+| Step | Task                                                                                                                                                                                                                                                                                                                                                                                                                  | File                                                | Gate                                                   |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
+| 3.1  | Change `SortBy` to tri-state `'newest' \| 'relevance' \| null`; add `searchQuery: string \| null`; update `EMPTY_FILTERS` (`sortBy: null, searchQuery: null`); update `isFiltered`                                                                                                                                                                                                                                    | `src/types/filter.ts` (modify)                      | `pnpm typecheck` reveals all call sites needing update |
+| 3.2  | Update every `FilterState`-typed object literal in tests + code; update `parseFilterParams` sort logic (absent param → `null`, `'newest'` → `'newest'`, `'relevance'` → `'relevance'`, junk → `null`); update `serialiseFilters` sort logic (`null` and `'newest'` both omit `sort` param? or only `null` omits? — decide: **`null` omits, explicit `'newest'` writes `sort=newest`** to preserve user intent in URL) | (multiple files)                                    | Build green                                            |
+| 3.3  | Extend `parseFilterParams` + `serialiseFilters` for `q`                                                                                                                                                                                                                                                                                                                                                               | `src/lib/filters/parse.ts` (modify)                 | New round-trip cases below                             |
+| 3.4  | Update FilterSidebar sort radio: when `sortBy === null` or `'newest'`, "Newest" radio is selected; clicking "Newest" sets `sortBy = 'newest'` (explicit)                                                                                                                                                                                                                                                              | `src/components/filters/FilterSidebar.tsx` (modify) | Radio behaviour visible in dev                         |
+| 3.5  | Update FilterChips: "Sort: relevance" chip only when `sortBy === 'relevance'`; no chip for `null` or `'newest'`                                                                                                                                                                                                                                                                                                       | `src/components/filters/FilterChips.tsx` (modify)   | Chips render                                           |
+| 3.6  | Add `q` + tri-state sort cases to existing parser test                                                                                                                                                                                                                                                                                                                                                                | `tests/unit/filter-parse.test.ts` (modify)          | Green                                                  |
 
 **New test cases** (3.4, additive — existing 29 must still pass):
+
 - `?q=forgery` → `searchQuery: 'forgery'`
 - `?q=` → `searchQuery: null` (empty string drops)
 - `?q=%20%20` → `searchQuery: null` (whitespace drops)
@@ -64,17 +66,18 @@ Add a comment at the top of `0002_add_search_vector.sql` noting: "Column intenti
 
 ### Phase 4 — Query layer extension (TDD)
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 4.1 | Write extended SQL-shape tests (RED) | `tests/unit/list-papers.test.ts` (modify) | Tests fail because new condition + order paths don't exist |
-| 4.2 | Extend `buildConditions` to AND `search_vector @@ websearch_to_tsquery('english', $q)` when `searchQuery !== null` (raw `sql\`search_vector\`` reference — column not in drizzle schema) | `src/lib/db/queries/list-papers-query.ts` (modify) | Green; existing 15 unit tests still pass |
-| 4.3 | Extend `buildOrderBy` to flip to `ts_rank_cd(sql\`search_vector\`, websearch_to_tsquery('english', $q)) DESC` when `searchQuery !== null` AND `sortBy === null` | `src/lib/db/queries/list-papers-query.ts` (modify) | Green |
-| 4.4 | Verify `dialect.sqlToQuery` correctly captures the bind param for `$q` inside the ORDER BY fragment (architect issue #3) | `tests/unit/list-papers.test.ts` (modify) | Compiled params array contains the query string |
-| 4.5 | Add `PaperWithHighlight = Paper & { headline: string \| null }` type (non-optional — always present) | `src/types/paper.ts` (modify) | Compiles |
-| 4.6 | Update `listRecentPapers` to use explicit `db.select({ ...papers, headline: sql<string \| null>... })` so return type is stable across search/no-search paths; emit `sql\`null::text\`` for headline when no search | `src/lib/db/queries/papers.ts` (modify) | `listRecentPapers` returns `PaperWithHighlight[]` always |
-| 4.7 | Update all `Paper[]` annotations that consume `listRecentPapers` to `PaperWithHighlight[]` (page.tsx:37 at minimum; grep for others) | (multiple files) | Typecheck green |
+| Step | Task                                                                                                                                                                                                                | File                                               | Gate                                                       |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------- |
+| 4.1  | Write extended SQL-shape tests (RED)                                                                                                                                                                                | `tests/unit/list-papers.test.ts` (modify)          | Tests fail because new condition + order paths don't exist |
+| 4.2  | Extend `buildConditions` to AND `search_vector @@ websearch_to_tsquery('english', $q)` when `searchQuery !== null` (raw `sql\`search_vector\`` reference — column not in drizzle schema)                            | `src/lib/db/queries/list-papers-query.ts` (modify) | Green; existing 15 unit tests still pass                   |
+| 4.3  | Extend `buildOrderBy` to flip to `ts_rank_cd(sql\`search_vector\`, websearch_to_tsquery('english', $q)) DESC`when`searchQuery !== null`AND`sortBy === null`                                                         | `src/lib/db/queries/list-papers-query.ts` (modify) | Green                                                      |
+| 4.4  | Verify `dialect.sqlToQuery` correctly captures the bind param for `$q` inside the ORDER BY fragment (architect issue #3)                                                                                            | `tests/unit/list-papers.test.ts` (modify)          | Compiled params array contains the query string            |
+| 4.5  | Add `PaperWithHighlight = Paper & { headline: string \| null }` type (non-optional — always present)                                                                                                                | `src/types/paper.ts` (modify)                      | Compiles                                                   |
+| 4.6  | Update `listRecentPapers` to use explicit `db.select({ ...papers, headline: sql<string \| null>... })` so return type is stable across search/no-search paths; emit `sql\`null::text\`` for headline when no search | `src/lib/db/queries/papers.ts` (modify)            | `listRecentPapers` returns `PaperWithHighlight[]` always   |
+| 4.7  | Update all `Paper[]` annotations that consume `listRecentPapers` to `PaperWithHighlight[]` (page.tsx:37 at minimum; grep for others)                                                                                | (multiple files)                                   | Typecheck green                                            |
 
 **New test cases** (4.1, ~8 additional):
+
 - Compiled SQL contains `websearch_to_tsquery` when `searchQuery !== null`
 - Compiled SQL does NOT contain `websearch_to_tsquery` when `searchQuery === null` (regression guard)
 - Compiled params include the literal query string when searching
@@ -88,16 +91,17 @@ Add a comment at the top of `0002_add_search_vector.sql` noting: "Column intenti
 
 ### Phase 5 — UI: SearchInput + highlight renderer (TDD)
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 5.1 | Write `renderHighlight` unit tests (RED) | `tests/unit/render-highlight.test.tsx` (new) | Tests fail — function doesn't exist |
-| 5.2 | Implement `renderHighlight` | `src/lib/search/render-highlight.tsx` (new) | All cases green |
-| 5.3 | Build `SearchInput.tsx` — accepts `initialValue: string` (normalised, not raw); every immediate navigation path (Enter, clear, Escape) calls `clearTimeout(timerRef.current)` BEFORE the navigation call (architect issue #4 race fix) | `src/components/search/SearchInput.tsx` (new) | Client component; debounced URL sync; clear button; Escape clears; no race observed in dev |
-| 5.4 | Add search CSS | `src/components/search/search.css` (new) | Token-driven; focus ring; clear-button placement; `<mark>` background |
-| 5.5 | Extend `PaperCard` to accept optional highlighted excerpt | `src/components/feed/PaperCard.tsx` (modify) | Falls back to plain abstract when no headline |
-| 5.6 | Add `no-search-matches` variant to `EmptyState` | `src/components/feed/EmptyState.tsx` (modify) | Renders query and clear-search link |
+| Step | Task                                                                                                                                                                                                                                   | File                                          | Gate                                                                                       |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 5.1  | Write `renderHighlight` unit tests (RED)                                                                                                                                                                                               | `tests/unit/render-highlight.test.tsx` (new)  | Tests fail — function doesn't exist                                                        |
+| 5.2  | Implement `renderHighlight`                                                                                                                                                                                                            | `src/lib/search/render-highlight.tsx` (new)   | All cases green                                                                            |
+| 5.3  | Build `SearchInput.tsx` — accepts `initialValue: string` (normalised, not raw); every immediate navigation path (Enter, clear, Escape) calls `clearTimeout(timerRef.current)` BEFORE the navigation call (architect issue #4 race fix) | `src/components/search/SearchInput.tsx` (new) | Client component; debounced URL sync; clear button; Escape clears; no race observed in dev |
+| 5.4  | Add search CSS                                                                                                                                                                                                                         | `src/components/search/search.css` (new)      | Token-driven; focus ring; clear-button placement; `<mark>` background                      |
+| 5.5  | Extend `PaperCard` to accept optional highlighted excerpt                                                                                                                                                                              | `src/components/feed/PaperCard.tsx` (modify)  | Falls back to plain abstract when no headline                                              |
+| 5.6  | Add `no-search-matches` variant to `EmptyState`                                                                                                                                                                                        | `src/components/feed/EmptyState.tsx` (modify) | Renders query and clear-search link                                                        |
 
 **`renderHighlight` test cases** (5.1, ~7 cases — using `\x02` / `\x03` sentinels):
+
 - No sentinels in input → returns the original string in a fragment
 - Single hit: `'foo \x02bar\x03 baz'` → `<>foo <mark>bar</mark> baz</>`
 - Multiple hits: `'a \x02b\x03 c \x02d\x03'` → two `<mark>` elements
@@ -110,60 +114,61 @@ Add a comment at the top of `0002_add_search_vector.sql` noting: "Column intenti
 
 ### Phase 6 — Page wiring + E2E (TDD where it makes sense)
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 6.1 | Render `<SearchInput>` above filter panel in `page.tsx`; pass `searchQuery` to `listRecentPapers` | `src/app/page.tsx` (modify) | Manual smoke: typing in input updates URL + result count |
-| 6.2 | Wire empty-state variant: `no-search-matches` when `searchQuery !== null && papers.length === 0` | `src/app/page.tsx` (modify) | Visible in browser |
-| 6.3 | Pass headline (when present) into `PaperCard` as `highlightedExcerpt` | `src/components/feed/PaperList.tsx` (modify if needed) or `page.tsx` | `<mark>` visible in feed |
-| 6.4 | Write Playwright E2E | `tests/e2e/search.spec.ts` (new) | Green |
+| Step | Task                                                                                              | File                                                                 | Gate                                                     |
+| ---- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------- |
+| 6.1  | Render `<SearchInput>` above filter panel in `page.tsx`; pass `searchQuery` to `listRecentPapers` | `src/app/page.tsx` (modify)                                          | Manual smoke: typing in input updates URL + result count |
+| 6.2  | Wire empty-state variant: `no-search-matches` when `searchQuery !== null && papers.length === 0`  | `src/app/page.tsx` (modify)                                          | Visible in browser                                       |
+| 6.3  | Pass headline (when present) into `PaperCard` as `highlightedExcerpt`                             | `src/components/feed/PaperList.tsx` (modify if needed) or `page.tsx` | `<mark>` visible in feed                                 |
+| 6.4  | Write Playwright E2E                                                                              | `tests/e2e/search.spec.ts` (new)                                     | Green                                                    |
 
 **E2E test cases** (6.4, ~3 cases):
+
 - Type `forgery` in input → wait 400ms → URL contains `?q=forgery` → result count text changes → at least one `<mark>` exists in feed
 - Press `Escape` while input focused → input clears → URL `q` removed → count returns to unfiltered total
 - Click clear-search link in `no-search-matches` empty state → URL `q` removed → original filter (e.g. `tag=foo`) preserved
 
 ### Phase 7 — Quality gates
 
-| Step | Task | Gate |
-|---|---|---|
-| 7.1 | `pnpm typecheck` | Clean |
-| 7.2 | `pnpm test:ci` | All tests green; A5 unit tests added without regressing existing 100+ tests |
-| 7.3 | `pnpm build` | Production build succeeds; First Load JS still under 150 KB budget |
-| 7.4 | Parallel reviewer sweep: `code-reviewer` + `typescript-reviewer` + `database-reviewer` + `security-reviewer` | No CRITICAL/HIGH open |
-| 7.5 | `a11y-architect` sweep on `SearchInput`, highlighted `<mark>`, empty state | Labelled input, labelled clear button, semantic mark, focus visible |
-| 7.6 | Manual viewport check: 390 / 768 / 1024 / 1440 | Search input full-width on mobile; inline with filters on desktop |
+| Step | Task                                                                                                         | Gate                                                                        |
+| ---- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| 7.1  | `pnpm typecheck`                                                                                             | Clean                                                                       |
+| 7.2  | `pnpm test:ci`                                                                                               | All tests green; A5 unit tests added without regressing existing 100+ tests |
+| 7.3  | `pnpm build`                                                                                                 | Production build succeeds; First Load JS still under 150 KB budget          |
+| 7.4  | Parallel reviewer sweep: `code-reviewer` + `typescript-reviewer` + `database-reviewer` + `security-reviewer` | No CRITICAL/HIGH open                                                       |
+| 7.5  | `a11y-architect` sweep on `SearchInput`, highlighted `<mark>`, empty state                                   | Labelled input, labelled clear button, semantic mark, focus visible         |
+| 7.6  | Manual viewport check: 390 / 768 / 1024 / 1440                                                               | Search input full-width on mobile; inline with filters on desktop           |
 
 ### Phase 8 — Commit + checkpoint
 
-| Step | Task |
-|---|---|
-| 8.1 | Conventional commit: `feat(search): add full-text search with tsvector, ranking, and highlight` |
-| 8.2 | Push to `origin/main` |
-| 8.3 | Update memory: write `a5-progress.md`, demote `a4-progress.md`, refresh `MEMORY.md` |
+| Step | Task                                                                                            |
+| ---- | ----------------------------------------------------------------------------------------------- |
+| 8.1  | Conventional commit: `feat(search): add full-text search with tsvector, ranking, and highlight` |
+| 8.2  | Push to `origin/main`                                                                           |
+| 8.3  | Update memory: write `a5-progress.md`, demote `a4-progress.md`, refresh `MEMORY.md`             |
 
 ## File estimate
 
-| File | Type | Est. lines |
-|---|---|---|
-| `drizzle/migrations/0003_add_search_vector.sql` | new | ~10 |
-| `src/lib/db/schema.ts` | modify | +10 |
-| `src/types/filter.ts` | modify | +5 |
-| `src/types/paper.ts` | modify | +5 |
-| `src/lib/search/parse-query.ts` | new | ~30 |
-| `src/lib/search/render-highlight.tsx` | new | ~40 |
-| `src/lib/filters/parse.ts` | modify | +20 |
-| `src/lib/db/queries/list-papers-query.ts` | modify | +30 |
-| `src/lib/db/queries/papers.ts` | modify | +25 |
-| `src/components/search/SearchInput.tsx` | new | ~120 |
-| `src/components/search/search.css` | new | ~80 |
-| `src/components/feed/PaperCard.tsx` | modify | +15 |
-| `src/components/feed/EmptyState.tsx` | modify | +20 |
-| `src/app/page.tsx` | modify | +15 |
-| `tests/unit/parse-query.test.ts` | new | ~80 |
-| `tests/unit/render-highlight.test.tsx` | new | ~80 |
-| `tests/unit/filter-parse.test.ts` | modify | +60 |
-| `tests/unit/list-papers.test.ts` | modify | +90 |
-| `tests/e2e/search.spec.ts` | new | ~100 |
+| File                                            | Type   | Est. lines |
+| ----------------------------------------------- | ------ | ---------- |
+| `drizzle/migrations/0003_add_search_vector.sql` | new    | ~10        |
+| `src/lib/db/schema.ts`                          | modify | +10        |
+| `src/types/filter.ts`                           | modify | +5         |
+| `src/types/paper.ts`                            | modify | +5         |
+| `src/lib/search/parse-query.ts`                 | new    | ~30        |
+| `src/lib/search/render-highlight.tsx`           | new    | ~40        |
+| `src/lib/filters/parse.ts`                      | modify | +20        |
+| `src/lib/db/queries/list-papers-query.ts`       | modify | +30        |
+| `src/lib/db/queries/papers.ts`                  | modify | +25        |
+| `src/components/search/SearchInput.tsx`         | new    | ~120       |
+| `src/components/search/search.css`              | new    | ~80        |
+| `src/components/feed/PaperCard.tsx`             | modify | +15        |
+| `src/components/feed/EmptyState.tsx`            | modify | +20        |
+| `src/app/page.tsx`                              | modify | +15        |
+| `tests/unit/parse-query.test.ts`                | new    | ~80        |
+| `tests/unit/render-highlight.test.tsx`          | new    | ~80        |
+| `tests/unit/filter-parse.test.ts`               | modify | +60        |
+| `tests/unit/list-papers.test.ts`                | modify | +90        |
+| `tests/e2e/search.spec.ts`                      | new    | ~100       |
 
 **No file approaches the 800-line cap.** Heaviest new file: `SearchInput.tsx` at ~120 lines.
 

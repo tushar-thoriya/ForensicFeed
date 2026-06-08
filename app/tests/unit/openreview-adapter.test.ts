@@ -3,10 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  openReviewAdapter,
-  parseOpenReviewSearch,
-} from '@/lib/ingestion/adapters/openreview'
+import { openReviewAdapter, parseOpenReviewSearch } from '@/lib/ingestion/adapters/openreview'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const fixturePath = resolve(here, '../fixtures/openreview-notes.json')

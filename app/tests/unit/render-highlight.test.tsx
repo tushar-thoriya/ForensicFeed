@@ -22,9 +22,7 @@ describe('renderHighlight', () => {
   })
 
   it('wraps a single highlight in <mark>', () => {
-    expect(renderToString(renderHighlight('foo \x02bar\x03 baz'))).toBe(
-      'foo <mark>bar</mark> baz',
-    )
+    expect(renderToString(renderHighlight('foo \x02bar\x03 baz'))).toBe('foo <mark>bar</mark> baz')
   })
 
   it('wraps multiple highlights independently', () => {

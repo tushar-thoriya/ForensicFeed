@@ -1,10 +1,6 @@
 import Link from 'next/link'
 
-export type EmptyStateVariant =
-  | 'no-papers'
-  | 'no-matches'
-  | 'no-search-matches'
-  | 'nothing-saved'
+export type EmptyStateVariant = 'no-papers' | 'no-matches' | 'no-search-matches' | 'nothing-saved'
 
 interface EmptyStateProps {
   variant: EmptyStateVariant

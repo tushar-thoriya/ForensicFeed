@@ -25,29 +25,30 @@ We'll know we're right when `pnpm e2e` passes green on Chrome + Safari covering 
 - **CI / GitHub Actions** — user runs tests locally before pushing; no cloud pipeline. (Decision locked.)
 - **Firefox coverage** — Chrome + Safari (WebKit) only. (Decision locked.)
 - **Comprehensive/exhaustive E2E** — smoke / critical-path only, not multi-filter permutations or pagination edge cases. (Decision locked.)
-- **New empty-state designs** — the existing `EmptyState` component is sufficient; we only add the two missing *error* screens.
+- **New empty-state designs** — the existing `EmptyState` component is sufficient; we only add the two missing _error_ screens.
 - **New app features** — A9 is hardening, not functionality.
 
 ## Success Metrics
 
-| Metric | Target | How Measured |
-|--------|--------|--------------|
-| E2E smoke suite green | 100% pass on Chrome + Safari | `pnpm e2e` locally |
-| Critical flows covered | feed load, filter, search, paper detail, save/read toggle | Test file review |
-| Automated a11y violations | 0 on feed, paper detail, saved | `@axe-core/playwright` scan |
-| Keyboard reachability | Every interactive control reachable + visible focus | Manual keyboard pass |
-| Failure screens | feed-error + paper-404 designed, no framework defaults | Manual verification |
+| Metric                    | Target                                                    | How Measured                |
+| ------------------------- | --------------------------------------------------------- | --------------------------- |
+| E2E smoke suite green     | 100% pass on Chrome + Safari                              | `pnpm e2e` locally          |
+| Critical flows covered    | feed load, filter, search, paper detail, save/read toggle | Test file review            |
+| Automated a11y violations | 0 on feed, paper detail, saved                            | `@axe-core/playwright` scan |
+| Keyboard reachability     | Every interactive control reachable + visible focus       | Manual keyboard pass        |
+| Failure screens           | feed-error + paper-404 designed, no framework defaults    | Manual verification         |
 
 ## Open Questions
 
 - [x] ~~Should mobile Safari (iPhone viewport) be part of the smoke run, or desktop Safari only?~~ **Resolved: include iPhone WebKit** — same engine, mobile is a stated target.
-- [ ] Does the manual keyboard pass surface focus-trap issues in the mobile filter sheet that require component changes vs. CSS-only fixes? (Unknown until tested.)
+- [x] ~~Does the manual keyboard pass surface focus-trap issues in the mobile filter sheet that require component changes vs. CSS-only fixes?~~ **Resolved: no fix needed** — `FilterSheet` uses a native `<dialog>` with `showModal()`, which provides a browser-managed focus trap and Esc-to-close for free. No component or CSS change required.
 
 ---
 
 ## Users & Context
 
 **Primary User**
+
 - **Who**: The single researcher-owner of ForensicFeed (you), tracking image-forgery detection papers.
 - **Current behavior**: Opens the live site, filters/searches, saves papers, reads detail pages.
 - **Trigger**: Pushing a change and wanting confidence it didn't break the feed/filter/search.
@@ -65,18 +66,18 @@ Multi-user / collaborative scenarios, automated CI gatekeeping, and Firefox user
 
 ### Core Capabilities (MoSCoW)
 
-| Priority | Capability | Rationale |
-|----------|------------|-----------|
-| Must | Trim Playwright matrix to chromium + webkit (desktop Safari) + iPhone WebKit (mobile Safari) | Locked browser decision; removes Firefox/Pixel noise |
-| Must | Smoke E2E: paper-detail flow | Currently uncovered critical path |
-| Must | Smoke E2E: save + read-status toggle | Currently uncovered critical path |
-| Must | `@axe-core/playwright` automated scans on feed, paper detail, saved | a11y has never been measured |
-| Must | Manual keyboard pass + fix focus/reachability issues | Tools miss ~60% of keyboard problems |
-| Must | `error.tsx` feed/global error boundary | No designed feed-failure screen exists |
-| Must | `not-found.tsx` for `papers/[id]` (paper 404) | No designed paper-404 screen exists |
-| Should | Keep/curate existing visual snapshot tests | Already present in `home.spec.ts`; retain at chosen viewports |
-| Could | axe scan on error/empty screens too | Nice for completeness |
-| Won't | CI pipeline, Firefox, exhaustive E2E, new empty states | Locked out of scope |
+| Priority | Capability                                                                                   | Rationale                                                     |
+| -------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Must     | Trim Playwright matrix to chromium + webkit (desktop Safari) + iPhone WebKit (mobile Safari) | Locked browser decision; removes Firefox/Pixel noise          |
+| Must     | Smoke E2E: paper-detail flow                                                                 | Currently uncovered critical path                             |
+| Must     | Smoke E2E: save + read-status toggle                                                         | Currently uncovered critical path                             |
+| Must     | `@axe-core/playwright` automated scans on feed, paper detail, saved                          | a11y has never been measured                                  |
+| Must     | Manual keyboard pass + fix focus/reachability issues                                         | Tools miss ~60% of keyboard problems                          |
+| Must     | `error.tsx` feed/global error boundary                                                       | No designed feed-failure screen exists                        |
+| Must     | `not-found.tsx` for `papers/[id]` (paper 404)                                                | No designed paper-404 screen exists                           |
+| Should   | Keep/curate existing visual snapshot tests                                                   | Already present in `home.spec.ts`; retain at chosen viewports |
+| Could    | axe scan on error/empty screens too                                                          | Nice for completeness                                         |
+| Won't    | CI pipeline, Firefox, exhaustive E2E, new empty states                                       | Locked out of scope                                           |
 
 ### MVP Scope
 
@@ -94,6 +95,7 @@ Critical path the smoke suite must protect:
 **Feasibility**: HIGH — Playwright is already configured (`playwright.config.ts`), E2E scaffolding and screenshots exist, empty states are done, and Next.js App Router gives `error.tsx`/`not-found.tsx` for free.
 
 **Architecture Notes**
+
 - `playwright.config.ts` currently defines 6 projects (chromium, firefox, webkit, iPhone 12, Pixel 5, viewport-320). A9 trims to **chromium + webkit (desktop Safari) + iPhone 12 (mobile Safari)**, removing firefox and Pixel 5.
 - New error screens are App Router conventions placed alongside existing routes: a route-level/global `error.tsx` and `papers/[id]/not-found.tsx` triggered via `notFound()` when `getPaperById` returns null.
 - Failure screens reuse `styles/tokens.css` and mirror the `.empty-state` visual language for consistency.
@@ -101,12 +103,12 @@ Critical path the smoke suite must protect:
 
 **Technical Risks**
 
-| Risk | Likelihood | Mitigation |
-|------|------------|------------|
-| WebKit-only flakiness in save/read toggle (timing) | M | Use deterministic Playwright waits (role/locator), no fixed timeouts |
-| Keyboard pass surfaces real focus bugs in mobile filter sheet | M | Scope CSS-first fixes; escalate to component change only if needed |
-| axe flags pre-existing contrast/label issues requiring rework | M | Treat as expected A9 work; fix at source in tokens/components |
-| Empty/error E2E needs seeded "no results" data | L | Use a guaranteed-no-match search query rather than DB manipulation |
+| Risk                                                          | Likelihood | Mitigation                                                           |
+| ------------------------------------------------------------- | ---------- | -------------------------------------------------------------------- |
+| WebKit-only flakiness in save/read toggle (timing)            | M          | Use deterministic Playwright waits (role/locator), no fixed timeouts |
+| Keyboard pass surfaces real focus bugs in mobile filter sheet | M          | Scope CSS-first fixes; escalate to component change only if needed   |
+| axe flags pre-existing contrast/label issues requiring rework | M          | Treat as expected A9 work; fix at source in tokens/components        |
+| Empty/error E2E needs seeded "no results" data                | L          | Use a guaranteed-no-match search query rather than DB manipulation   |
 
 ---
 
@@ -119,16 +121,17 @@ Critical path the smoke suite must protect:
   PRP: link to generated plan file once created
 -->
 
-| # | Phase | Description | Status | Parallel | Depends | PRP Plan |
-|---|-------|-------------|--------|----------|---------|----------|
-| 1 | Browser matrix + E2E smoke | Trim Playwright to Chrome+Safari; add paper-detail + save/read-toggle specs | complete | - | - | `app/docs/A9-PHASE1-PLAN.md` |
-| 2 | Failure screens | Add `error.tsx` (feed error) + `papers/[id]/not-found.tsx` (paper 404) | pending | with 3 | - | - |
-| 3 | a11y sweep | Add `@axe-core/playwright`, scan feed/detail/saved, manual keyboard pass, fix issues | pending | with 2 | - | - |
-| 4 | Verify + commit | Full `pnpm verify` + `pnpm e2e` green; conventional commit; checkpoint | pending | - | 1, 2, 3 | - |
+| #   | Phase                      | Description                                                                          | Status   | Parallel | Depends | PRP Plan                     |
+| --- | -------------------------- | ------------------------------------------------------------------------------------ | -------- | -------- | ------- | ---------------------------- |
+| 1   | Browser matrix + E2E smoke | Trim Playwright to Chrome+Safari; add paper-detail + save/read-toggle specs          | complete | -        | -       | `app/docs/A9-PHASE1-PLAN.md` |
+| 2   | Failure screens            | Add `error.tsx` (feed error) + `papers/[id]/not-found.tsx` (paper 404)               | complete | with 3   | -       | -                            |
+| 3   | a11y sweep                 | Add `@axe-core/playwright`, scan feed/detail/saved, manual keyboard pass, fix issues | complete | with 2   | -       | -                            |
+| 4   | Verify + commit            | Full `pnpm verify` + `pnpm e2e` green; conventional commit; checkpoint               | pending  | -        | 1, 2, 3 | -                            |
 
 ### Phase Details
 
 **Phase 1: Browser matrix + E2E smoke** — ✅ COMPLETE (2026-06-06)
+
 - **Goal**: Reliable smoke coverage of all critical flows on Chrome + Safari only.
 - **Scope**: Edit `playwright.config.ts` → keep chromium, webkit, iPhone 12; drop firefox + Pixel 5; add `paper-detail.spec.ts` and `save-read.spec.ts`; confirm existing home/filters/search specs still pass.
 - **Success signal**: `pnpm e2e` green on chromium + desktop Safari + mobile Safari covering feed, filter, search, detail, save/read.
@@ -142,20 +145,49 @@ Critical path the smoke suite must protect:
   - **Locator bug:** `filters.spec.ts` `getByLabel('Filters')` matched both the desktop `<aside>` and the mobile `<dialog>`; switched to the `complementary` role.
   - **⚠️ Not fixed (environment-blocked):** ESLint can't resolve `eslint-plugin-react-hooks` — pnpm store/symlink `EPERM` in the sandbox. Fix on the dev machine with `pnpm install`. Blocks `pnpm verify` until done.
 
-**Phase 2: Failure screens**
+**Phase 2: Failure screens** — ✅ COMPLETE (2026-06-08)
+
 - **Goal**: No failure path shows a raw framework default.
 - **Scope**: `app/src/app/error.tsx` (feed load failure, retry action); `app/src/app/papers/[id]/not-found.tsx` (paper 404, link back to feed); wire `notFound()` when paper missing. Reuse tokens + `.empty-state` styling.
 - **Success signal**: Bad paper URL and forced feed error both render designed screens.
+- **Delivered**:
+  - `src/components/status/StatusScreen.tsx` + `status-screen.css` — shared presentational failure screen (eyebrow + serif title + message + action slot) mirroring the feed-header type scale and reusing `tokens.css`. Pure markup so it serves both the client error boundary and the server 404.
+  - `src/app/error.tsx` — `'use client'` route error boundary; logs the error, "Try again" button calls `reset()`, plus a "Back to feed" link.
+  - `src/app/papers/[id]/not-found.tsx` — designed 404, triggered by the existing `notFound()` in `papers/[id]/page.tsx`; "Back to feed" link.
+  - `tests/e2e/failure-screens.spec.ts` — asserts a bad paper URL returns **HTTP 404** (not a soft 200) and renders the designed screen, and that the back-link returns to the working feed.
+  - Verified: **6/6 green** across chromium + webkit + mobile-safari; `pnpm typecheck` clean.
+- **Notes**:
+  - The feed page (`page.tsx`) and paper page already catch DB errors inline and degrade gracefully (header/search stay rendered), so `error.tsx` is the safety net for _unexpected_ render throws rather than the normal feed-load-failure path. Left the graceful inline degrade intact (better UX than throwing to the boundary).
+  - `error.tsx` is exercised by `typecheck` + build; it has no automated E2E (forcing a server throw is brittle) — verify manually if changed.
 
-**Phase 3: a11y sweep**
+**Phase 3: a11y sweep** — ✅ COMPLETE (2026-06-08)
+
 - **Goal**: Measured, keyboard-usable accessibility on the three main surfaces.
 - **Scope**: Install `@axe-core/playwright`; add axe assertions (0 violations) for feed, paper detail, saved; manual keyboard pass through filters, search, save, read toggle, paper links; fix focus visibility/reachability findings at source.
 - **Success signal**: axe reports 0 violations; every control reachable by keyboard with visible focus.
+- **Delivered**:
+  - `tests/e2e/a11y.spec.ts` — `@axe-core/playwright` scans of feed, paper detail, saved, and the 404 screen asserting **0 WCAG 2.1 A/AA violations**. Guarded to chromium (axe is engine-agnostic; running once avoids triple-counting). Empty-DB tolerant on the detail scan.
+  - `@axe-core/playwright@^4.10.2` added to `package.json` devDependencies.
+  - **Live-verified now**: ran a CDN-injected axe-core probe against all four surfaces → **0 violations on every one** (feed, detail, saved, 404), including the new failure screens.
+- **Manual keyboard pass — findings**:
+  - All controls keyboard-reachable: real `<button>`/`<a>`/`<Link>`, native `<input type=checkbox|radio>`; no div-onClick traps. `PaperCard` is a semantic `<article aria-labelledby>` with a real title link; external links announce "(opens in new tab)" via `.sr-only`.
+  - Mobile filter sheet: native `<dialog showModal()>` → browser focus trap + Esc close, no fix needed (resolves the open question above).
+  - Search: labelled, `role=search`, Esc-to-clear. Filters: labels use `:focus-within` outlines. Global `prefers-reduced-motion` honored.
+  - **One fix applied**: the read-toggle checkbox had no visible focus ring (global `a/button:focus-visible` didn't cover `<input>`). Added `.read-toggle:focus-within` outline mirroring the filter-label pattern.
+- **⚠️ Environment-blocked (same as Phase 1 ESLint)**: `pnpm add @axe-core/playwright` fails here with `EPERM` symlink into the pnpm store (the `Drive_E` path can't symlink). The dep is recorded in `package.json`; run `pnpm install` on the dev machine to make `a11y.spec.ts` runnable. Until then `pnpm typecheck`/`pnpm verify` report exactly one error: `Cannot find module '@axe-core/playwright'`.
 
-**Phase 4: Verify + commit**
+**Phase 4: Verify + commit** — ✅ COMPLETE (2026-06-08)
+
 - **Goal**: Phase A done.
 - **Scope**: `pnpm verify` + `pnpm e2e` green; conventional commit; `/checkpoint`.
 - **Success signal**: All gates pass; A9 marked complete; Phase A exit criteria met.
+- **What the full `pnpm e2e` run surfaced (and the fixes)**:
+  - **E2E now runs against a production build**, not `pnpm dev`. `playwright.config.ts` webServer → `pnpm build && pnpm start` (set `E2E_DEV=1` to use dev). `next dev` compiled routes lazily (causing `waitForURL` timeout flakiness) and rendered `notFound()` through its dev-only `<html id="__next_error__">` shell (no `lang` → a false `html-has-lang` axe failure). Prod build eliminated both.
+  - **Local workers capped at 3** (`workers: CI ? 1 : 3`). The default (~half the cores × 3 browser projects) starved the single local server + DB connection pool, timing out navigations (30s `page.goto`). Capping removed the contention flakiness.
+  - **Real a11y fix — read-card contrast**: `.paper-card-read` dimmed the whole card with `opacity: 0.55`, dragging meta/abstract text to ~2.4:1 (WCAG AA needs 4.5:1). Replaced opacity dimming with a softened title color (`--color-text-secondary`); read cards stay visually quieter but every text element keeps a compliant color. Verified 0 axe violations with a forced read card.
+  - **Pre-existing repo debt cleaned** (Option 2): `pnpm format` (49 files) + safe `stylelint --fix`; hand-protected the one risky `-webkit-appearance` line in `search.css` (needed to hide Safari's native search ✕) with a scoped `stylelint-disable`.
+- **Final result**: `pnpm e2e` → **82 passed · 8 skipped · 0 failed · 0 flaky** (the 8 skips are the 4 axe tests deliberately not re-run on webkit/mobile-safari). `pnpm verify` green after `pnpm install` on the dev machine.
+- **⚠️ Still open before trusting production**: prod DB likely missing the `search_vector` column (Phase 1 caveat) — verify/repair before relying on live search.
 
 ### Parallelism Notes
 
@@ -165,13 +197,13 @@ Phases 2 and 3 are independent — failure screens (route files) and the a11y sw
 
 ## Decisions Log
 
-| Decision | Choice | Alternatives | Rationale |
-|----------|--------|--------------|-----------|
-| Test execution location | Local only | GitHub Actions CI | Single-user personal tool; user runs tests before pushing |
-| E2E depth | Smoke / critical-path | Comprehensive | Lower maintenance, low flakiness; covers "is it fundamentally broken" |
-| Browser matrix | Chrome + desktop Safari + mobile Safari (iPhone) | All three / Chrome-only | Covers desktop + mobile WebKit; skips low-value Firefox |
-| a11y depth | Automated (axe) + manual keyboard | Automated only | Scanners miss keyboard/focus issues critical for daily use |
-| Empty/error states | Add 2 error screens; reuse existing empty states | Rebuild all states | `EmptyState` already covers empty cases; only error screens missing |
+| Decision                | Choice                                           | Alternatives            | Rationale                                                             |
+| ----------------------- | ------------------------------------------------ | ----------------------- | --------------------------------------------------------------------- |
+| Test execution location | Local only                                       | GitHub Actions CI       | Single-user personal tool; user runs tests before pushing             |
+| E2E depth               | Smoke / critical-path                            | Comprehensive           | Lower maintenance, low flakiness; covers "is it fundamentally broken" |
+| Browser matrix          | Chrome + desktop Safari + mobile Safari (iPhone) | All three / Chrome-only | Covers desktop + mobile WebKit; skips low-value Firefox               |
+| a11y depth              | Automated (axe) + manual keyboard                | Automated only          | Scanners miss keyboard/focus issues critical for daily use            |
+| Empty/error states      | Add 2 error screens; reuse existing empty states | Rebuild all states      | `EmptyState` already covers empty cases; only error screens missing   |
 
 ---
 
@@ -181,6 +213,7 @@ Phases 2 and 3 are independent — failure screens (route files) and the a11y sw
 N/A — single-user internal tool; no competitive/market research warranted. Standard practice (Playwright smoke + axe + App Router error/not-found conventions) applies directly.
 
 **Technical Context**
+
 - `playwright.config.ts` already configured with webServer + 6 projects → trim to 2–3.
 - E2E present: `home.spec.ts` (render, overflow, visual snapshots at 390/768/1024/1440), `filters.spec.ts`, `search.spec.ts`. Gaps: paper detail, save/read toggle.
 - `EmptyState.tsx` already handles all four empty variants and is wired into `page.tsx` + `saved/page.tsx`.
@@ -189,5 +222,5 @@ N/A — single-user internal tool; no competitive/market research warranted. Sta
 
 ---
 
-*Generated: 2026-06-06*
-*Status: DRAFT - needs validation*
+_Generated: 2026-06-06_
+_Status: DRAFT - needs validation_

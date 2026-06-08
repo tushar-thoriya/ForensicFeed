@@ -39,40 +39,40 @@ Two new conference sources flow into the same feed alongside arXiv, Hugging Face
 
 ## Existing state (post-A2)
 
-| Piece | File | Status |
-|---|---|---|
-| `paper_source` enum has `'cvf'`, `'openreview'` | `src/lib/db/schema.ts:22` | ✅ Already enumerated; no migration needed |
-| `venue_type` enum has `'conference'`, `'workshop'` | `src/lib/db/schema.ts:14` | ✅ Already enumerated |
-| `PaperSource` / `VenueType` TS types | `src/types/paper.ts` | ✅ Match enum |
-| `findExistingPaper` priority dedup | `src/lib/db/queries/papers.ts:10` | ✅ Hash branch covered by tests |
-| `runAdapter` orchestrator | `src/lib/ingestion/run.ts` | ✅ Source-agnostic |
-| `Adapter` interface | `src/lib/ingestion/types.ts` | ✅ Reusable as-is |
-| `createManualIngestHandler` factory | `src/lib/inngest/manual-trigger.ts` | ✅ Use for new routes |
-| `parseIngestEvent` Zod validator | `src/lib/inngest/utils.ts` | ✅ Reusable |
-| `extractCodeUrl` utility | `src/lib/ingestion/code-url.ts` | ✅ Apply to OR abstracts too |
-| `sanitiseExternalUrl` allow-list | `src/lib/security/url.ts` | ✅ Apply to all CVF/OR external URLs |
-| `INGEST_TRIGGER_SECRET` constant-time check | factory | ✅ Inherited by new routes |
+| Piece                                              | File                                | Status                                     |
+| -------------------------------------------------- | ----------------------------------- | ------------------------------------------ |
+| `paper_source` enum has `'cvf'`, `'openreview'`    | `src/lib/db/schema.ts:22`           | ✅ Already enumerated; no migration needed |
+| `venue_type` enum has `'conference'`, `'workshop'` | `src/lib/db/schema.ts:14`           | ✅ Already enumerated                      |
+| `PaperSource` / `VenueType` TS types               | `src/types/paper.ts`                | ✅ Match enum                              |
+| `findExistingPaper` priority dedup                 | `src/lib/db/queries/papers.ts:10`   | ✅ Hash branch covered by tests            |
+| `runAdapter` orchestrator                          | `src/lib/ingestion/run.ts`          | ✅ Source-agnostic                         |
+| `Adapter` interface                                | `src/lib/ingestion/types.ts`        | ✅ Reusable as-is                          |
+| `createManualIngestHandler` factory                | `src/lib/inngest/manual-trigger.ts` | ✅ Use for new routes                      |
+| `parseIngestEvent` Zod validator                   | `src/lib/inngest/utils.ts`          | ✅ Reusable                                |
+| `extractCodeUrl` utility                           | `src/lib/ingestion/code-url.ts`     | ✅ Apply to OR abstracts too               |
+| `sanitiseExternalUrl` allow-list                   | `src/lib/security/url.ts`           | ✅ Apply to all CVF/OR external URLs       |
+| `INGEST_TRIGGER_SECRET` constant-time check        | factory                             | ✅ Inherited by new routes                 |
 
 ## Deliverables
 
-| # | File | Purpose |
-|---|---|---|
-| 1 | `tests/fixtures/cvf-proceedings.html` (new) | Trimmed CVPR 2025 proceedings page snippet with ~6 entries — 2 forgery-relevant, 4 unrelated. |
-| 2 | `tests/unit/cvf-adapter.test.ts` (new) | Parse + normalise; keyword filter; missing arxivId path; supplementary-pdf preference; partial-failure path. |
-| 3 | `src/lib/ingestion/adapters/cvf.ts` (new) | CVF adapter implementation. ≤ 250 lines target. |
-| 4 | `tests/fixtures/openreview-notes.json` (new) | Captured OpenReview API v2 search response. |
-| 5 | `tests/unit/openreview-adapter.test.ts` (new) | Parse + normalise; keyword filter; pagination cursor; ICLR vs NeurIPS routing; missing-abstract fallback. |
-| 6 | `src/lib/ingestion/adapters/openreview.ts` (new) | OpenReview adapter implementation. ≤ 250 lines target. |
-| 7 | `src/lib/inngest/ingest-cvf.ts` (new) | Weekly cron `0 7 * * 1` + manual-trigger event handler. |
-| 8 | `src/lib/inngest/ingest-openreview.ts` (new) | Weekly cron `30 7 * * 1` + manual-trigger event handler. |
-| 9 | `src/app/api/inngest/route.ts` (modified) | Register `cvfFunctions` + `openreviewFunctions`. |
-| 10 | `src/app/api/ingest/cvf/route.ts` (new) | `POST` → emits `ingest/cvf.manual`. Uses factory. |
-| 11 | `src/app/api/ingest/openreview/route.ts` (new) | `POST` → emits `ingest/openreview.manual`. Uses factory. |
-| 12 | `src/components/feed/PaperCard.tsx` (modified) | `venue_type` pill: `arXiv` / `Conference` / `Workshop` / `Preprint`. |
-| 13 | `src/components/feed/feed.css` (modified) | New `.tag-badge-venue` class, token-driven, AA contrast. |
-| 14 | `tests/unit/multi-source-dedup.test.ts` (modified) | Add a fourth-source merge case (CVF or OR enriching arXiv row). |
-| 15 | `.env.example` (modified) | Document `INGESTION_CVF_VENUES` (default `CVPR2025,CVPR2024,ICCV2025,WACV2025`) and `INGESTION_OPENREVIEW_VENUES` (default `ICLR.cc/2025/Conference,NeurIPS.cc/2024/Conference`). |
-| 16 | `src/lib/env.ts` (modified) | Zod-parse the two new optional env vars; sensible defaults. |
+| #   | File                                               | Purpose                                                                                                                                                                           |
+| --- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `tests/fixtures/cvf-proceedings.html` (new)        | Trimmed CVPR 2025 proceedings page snippet with ~6 entries — 2 forgery-relevant, 4 unrelated.                                                                                     |
+| 2   | `tests/unit/cvf-adapter.test.ts` (new)             | Parse + normalise; keyword filter; missing arxivId path; supplementary-pdf preference; partial-failure path.                                                                      |
+| 3   | `src/lib/ingestion/adapters/cvf.ts` (new)          | CVF adapter implementation. ≤ 250 lines target.                                                                                                                                   |
+| 4   | `tests/fixtures/openreview-notes.json` (new)       | Captured OpenReview API v2 search response.                                                                                                                                       |
+| 5   | `tests/unit/openreview-adapter.test.ts` (new)      | Parse + normalise; keyword filter; pagination cursor; ICLR vs NeurIPS routing; missing-abstract fallback.                                                                         |
+| 6   | `src/lib/ingestion/adapters/openreview.ts` (new)   | OpenReview adapter implementation. ≤ 250 lines target.                                                                                                                            |
+| 7   | `src/lib/inngest/ingest-cvf.ts` (new)              | Weekly cron `0 7 * * 1` + manual-trigger event handler.                                                                                                                           |
+| 8   | `src/lib/inngest/ingest-openreview.ts` (new)       | Weekly cron `30 7 * * 1` + manual-trigger event handler.                                                                                                                          |
+| 9   | `src/app/api/inngest/route.ts` (modified)          | Register `cvfFunctions` + `openreviewFunctions`.                                                                                                                                  |
+| 10  | `src/app/api/ingest/cvf/route.ts` (new)            | `POST` → emits `ingest/cvf.manual`. Uses factory.                                                                                                                                 |
+| 11  | `src/app/api/ingest/openreview/route.ts` (new)     | `POST` → emits `ingest/openreview.manual`. Uses factory.                                                                                                                          |
+| 12  | `src/components/feed/PaperCard.tsx` (modified)     | `venue_type` pill: `arXiv` / `Conference` / `Workshop` / `Preprint`.                                                                                                              |
+| 13  | `src/components/feed/feed.css` (modified)          | New `.tag-badge-venue` class, token-driven, AA contrast.                                                                                                                          |
+| 14  | `tests/unit/multi-source-dedup.test.ts` (modified) | Add a fourth-source merge case (CVF or OR enriching arXiv row).                                                                                                                   |
+| 15  | `.env.example` (modified)                          | Document `INGESTION_CVF_VENUES` (default `CVPR2025,CVPR2024,ICCV2025,WACV2025`) and `INGESTION_OPENREVIEW_VENUES` (default `ICLR.cc/2025/Conference,NeurIPS.cc/2024/Conference`). |
+| 16  | `src/lib/env.ts` (modified)                        | Zod-parse the two new optional env vars; sensible defaults.                                                                                                                       |
 
 ## Contracts
 

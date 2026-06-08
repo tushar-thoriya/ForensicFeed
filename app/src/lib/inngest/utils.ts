@@ -19,9 +19,7 @@ const ingestEventSchema = z
 // Inngest delivers `event.data` as `Record<string, unknown>`. Validate before
 // constructing a Date — passing a number to `new Date()` silently produces an
 // epoch-relative result instead of throwing.
-export function parseIngestEvent(
-  data: unknown,
-): { seed: boolean; since: Date | null } {
+export function parseIngestEvent(data: unknown): { seed: boolean; since: Date | null } {
   const parsed = ingestEventSchema.safeParse(data ?? {})
   if (!parsed.success) return { seed: false, since: null }
   return {

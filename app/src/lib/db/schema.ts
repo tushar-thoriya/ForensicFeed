@@ -35,12 +35,7 @@ export const readStatusValue = pgEnum('read_status_value', [
   'archived',
 ])
 
-export const ingestStatus = pgEnum('ingest_status', [
-  'running',
-  'success',
-  'partial',
-  'failed',
-])
+export const ingestStatus = pgEnum('ingest_status', ['running', 'success', 'partial', 'failed'])
 
 export const papers = pgTable(
   'papers',

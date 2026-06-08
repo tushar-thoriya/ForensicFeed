@@ -107,10 +107,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             Open-access research on image forgery detection and localization — tracked so nothing
             slips past.
           </p>
-          <SearchInput
-            initialValue={filters.searchQuery ?? ''}
-            resultStatusId={RESULT_STATUS_ID}
-          />
+          <SearchInput initialValue={filters.searchQuery ?? ''} resultStatusId={RESULT_STATUS_ID} />
           <p id={RESULT_STATUS_ID} className="feed-meta">
             <span aria-live="polite" role="status">
               {errorMessage ? 'connection issue' : liveCount}

@@ -21,26 +21,27 @@ Lock the foundations for the Research Paper Tracker before any ingestion or UI w
 
 ## Inputs (already landed — do not regress)
 
-| Artifact | Location |
-|---|---|
-| 4-table Drizzle schema | `src/lib/db/schema.ts` — `papers`, `user_saves`, `read_status`, `ingest_runs` + enums |
-| Adapter contract | `src/lib/ingestion/types.ts` — `Adapter`, `AdapterFetchOptions`, `RunResult` |
-| `NormalisedPaper` type | `src/types/paper.ts` |
-| Zod V4 env schema | `src/lib/env.ts` |
-| Hooks config | `.claude/settings.json` (root) — prettier/eslint/stylelint post, 800-line pre guard |
-| Existing arXiv adapter (A1 spill-over) | `src/lib/ingestion/adapters/arxiv.ts` + fixture + tests |
+| Artifact                               | Location                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------- |
+| 4-table Drizzle schema                 | `src/lib/db/schema.ts` — `papers`, `user_saves`, `read_status`, `ingest_runs` + enums |
+| Adapter contract                       | `src/lib/ingestion/types.ts` — `Adapter`, `AdapterFetchOptions`, `RunResult`          |
+| `NormalisedPaper` type                 | `src/types/paper.ts`                                                                  |
+| Zod V4 env schema                      | `src/lib/env.ts`                                                                      |
+| Hooks config                           | `.claude/settings.json` (root) — prettier/eslint/stylelint post, 800-line pre guard   |
+| Existing arXiv adapter (A1 spill-over) | `src/lib/ingestion/adapters/arxiv.ts` + fixture + tests                               |
 
 ## A0 deliverables (this PRD)
 
-| # | File | Purpose |
-|---|---|---|
-| 1 | `tests/unit/relevance.test.ts` | Failing tests for scorer + tagger (TDD red) |
-| 2 | `src/lib/ingestion/tagger.ts` | Relevance scorer + 12-tag auto-assigner |
-| 3 | `.agents/skills/paper-tracker-ingestion/SKILL.md` | Ingestion adapter patterns skill |
-| 4 | `.agents/skills/paper-tracker-relevance/SKILL.md` | Scoring + tagging skill |
-| 5 | `docs/A0-PRD.md` | This file |
+| #   | File                                              | Purpose                                     |
+| --- | ------------------------------------------------- | ------------------------------------------- |
+| 1   | `tests/unit/relevance.test.ts`                    | Failing tests for scorer + tagger (TDD red) |
+| 2   | `src/lib/ingestion/tagger.ts`                     | Relevance scorer + 12-tag auto-assigner     |
+| 3   | `.agents/skills/paper-tracker-ingestion/SKILL.md` | Ingestion adapter patterns skill            |
+| 4   | `.agents/skills/paper-tracker-relevance/SKILL.md` | Scoring + tagging skill                     |
+| 5   | `docs/A0-PRD.md`                                  | This file                                   |
 
 Optional housekeeping (if time permits):
+
 - Stale `docs/A1-PRD.md` (V2-era "GitHub trending") rewrite or delete — deferred to A1 kickoff.
 - `Plan.md` Current Status table: flip A0 to `🔄 In progress` / `✅ Done`.
 
@@ -61,18 +62,18 @@ interface RelevanceInput {
 
 ```ts
 interface RelevanceResult {
-  score: number       // 0.0–1.0, capped
-  tags: string[]      // subset of the 12-tag vocabulary, deduplicated, stable order
+  score: number // 0.0–1.0, capped
+  tags: string[] // subset of the 12-tag vocabulary, deduplicated, stable order
 }
 ```
 
 ### Keyword weight table
 
-| Tier | Title match | Abstract match | Keywords |
-|---|---|---|---|
-| High | +0.4 | +0.2 | forgery detection, tamper detection, manipulation detection, image forensics, forgery localization, splicing detection, copy-move detection, inpainting detection, document authentication, document verification, ID document, passport forgery |
-| Medium | +0.2 | +0.1 | image integrity, deepfake detection, face swap detection, GAN detection, AI-generated image, pixel-level segmentation, anomaly localization, passive authentication, PRNU, noise analysis, watermark detection |
-| Low | 0 | +0.05 | image authenticity, digital forensics, image manipulation, steganalysis |
+| Tier   | Title match | Abstract match | Keywords                                                                                                                                                                                                                                         |
+| ------ | ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| High   | +0.4        | +0.2           | forgery detection, tamper detection, manipulation detection, image forensics, forgery localization, splicing detection, copy-move detection, inpainting detection, document authentication, document verification, ID document, passport forgery |
+| Medium | +0.2        | +0.1           | image integrity, deepfake detection, face swap detection, GAN detection, AI-generated image, pixel-level segmentation, anomaly localization, passive authentication, PRNU, noise analysis, watermark detection                                   |
+| Low    | 0           | +0.05          | image authenticity, digital forensics, image manipulation, steganalysis                                                                                                                                                                          |
 
 ### Rules
 
@@ -87,20 +88,20 @@ interface RelevanceResult {
 
 From `Ideas V4.md §12`. Case-insensitive substring match over `title + " " + (abstract ?? "")`:
 
-| Tag | Trigger keywords |
-|---|---|
-| `copy-move` | copy-move, copy move, duplication detection |
-| `splicing` | splicing, splice, composite image |
-| `inpainting` | inpainting, removal detection, object removal |
-| `localization` | localization, segmentation mask, pixel-level, region-level |
-| `document` | document, passport, ID card, driving license, national ID, OVD |
-| `text-manipulation` | text region, OCR tampering, text forgery, altered text |
-| `deepfake` | deepfake, face swap, face manipulation, face forgery |
-| `gan-detection` | GAN detection, AI-generated, synthetic image, generative |
-| `passive-auth` | passive authentication, no watermark, blind detection |
-| `forensics` | image forensics, digital forensics, PRNU, noise analysis |
-| `transformer` | transformer, ViT, attention-based |
-| `diffusion` | diffusion model, DDPM |
+| Tag                 | Trigger keywords                                               |
+| ------------------- | -------------------------------------------------------------- |
+| `copy-move`         | copy-move, copy move, duplication detection                    |
+| `splicing`          | splicing, splice, composite image                              |
+| `inpainting`        | inpainting, removal detection, object removal                  |
+| `localization`      | localization, segmentation mask, pixel-level, region-level     |
+| `document`          | document, passport, ID card, driving license, national ID, OVD |
+| `text-manipulation` | text region, OCR tampering, text forgery, altered text         |
+| `deepfake`          | deepfake, face swap, face manipulation, face forgery           |
+| `gan-detection`     | GAN detection, AI-generated, synthetic image, generative       |
+| `passive-auth`      | passive authentication, no watermark, blind detection          |
+| `forensics`         | image forensics, digital forensics, PRNU, noise analysis       |
+| `transformer`       | transformer, ViT, attention-based                              |
+| `diffusion`         | diffusion model, DDPM                                          |
 
 Tags returned in the stable order above (not insertion order) so ordering is deterministic.
 

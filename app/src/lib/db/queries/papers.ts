@@ -1,12 +1,7 @@
 import { and, eq, sql, type SQL } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
 import { papers, readStatus, userSaves, type NewPaper } from '@/lib/db/schema'
-import type {
-  NormalisedPaper,
-  PaperSource,
-  PaperWithUserState,
-  VenueType,
-} from '@/types/paper'
+import type { NormalisedPaper, PaperSource, PaperWithUserState, VenueType } from '@/types/paper'
 import { titleHash as computeTitleHash } from '@/lib/ingestion/dedup'
 import { assignTags, scoreRelevance } from '@/lib/ingestion/tagger'
 import { EMPTY_FILTERS, type FilterState } from '@/types/filter'
@@ -41,11 +36,7 @@ async function findExistingPaper(input: {
   return null
 }
 
-function paperId(input: {
-  arxivId: string | null
-  doi: string | null
-  titleHash: string
-}): string {
+function paperId(input: { arxivId: string | null; doi: string | null; titleHash: string }): string {
   if (input.arxivId) return `arxiv:${input.arxivId}`
   if (input.doi) return `doi:${input.doi}`
   return `hash:${input.titleHash}`
@@ -123,9 +114,7 @@ export interface ListOptions {
 // renderHighlight) and `null` otherwise. `isSaved` / `isRead` come from LEFT
 // JOINs on user_saves / read_status — absent rows project to false so
 // consumers can read them as plain booleans (see PaperWithUserState).
-export async function listRecentPapers(
-  options: ListOptions = {},
-): Promise<PaperWithUserState[]> {
+export async function listRecentPapers(options: ListOptions = {}): Promise<PaperWithUserState[]> {
   const { filters = EMPTY_FILTERS, limit = DEFAULT_FEED_LIMIT, minRelevance = 0, since } = options
   const clampedLimit = Math.min(Math.max(limit, 1), MAX_FEED_LIMIT)
 
@@ -162,7 +151,9 @@ export async function listRecentPapers(
   // branch the entire sql`...` template, never interpolate user input.
   const headlineExpr =
     filters.searchQuery !== null
-      ? sql<string | null>`ts_headline('english', coalesce(${papers.title}, '') || ' ' || coalesce(${papers.abstract}, ''), websearch_to_tsquery('english', ${filters.searchQuery}), 'StartSel=\x02,StopSel=\x03,MaxWords=35,MinWords=15,MaxFragments=1')`
+      ? sql<
+          string | null
+        >`ts_headline('english', coalesce(${papers.title}, '') || ' ' || coalesce(${papers.abstract}, ''), websearch_to_tsquery('english', ${filters.searchQuery}), 'StartSel=\x02,StopSel=\x03,MaxWords=35,MinWords=15,MaxFragments=1')`
       : sql<string | null>`null::text`
 
   const rows = await db

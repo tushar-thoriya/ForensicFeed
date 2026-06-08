@@ -3,10 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  huggingfaceAdapter,
-  parseHuggingFaceSearch,
-} from '@/lib/ingestion/adapters/huggingface'
+import { huggingfaceAdapter, parseHuggingFaceSearch } from '@/lib/ingestion/adapters/huggingface'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const fixturePath = resolve(here, '../fixtures/huggingface-papers.json')
@@ -99,9 +96,7 @@ describe('huggingfaceAdapter.fetch', () => {
   })
 
   it('throws if every keyword query fails', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response('boom', { status: 503 }),
-    )
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('boom', { status: 503 }))
     await expect(
       huggingfaceAdapter.fetch({
         since: new Date('2026-01-01T00:00:00Z'),

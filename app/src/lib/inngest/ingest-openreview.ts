@@ -27,9 +27,7 @@ export const ingestOpenReviewWeekly = inngest.createFunction(
     const now = new Date()
     const since = new Date(now.getTime() - ONE_DAY_MS * 14)
     const venues = readVenuesFromEnv()
-    return step.run('run-openreview', () =>
-      runAdapter(openReviewAdapter, { since, now, venues }),
-    )
+    return step.run('run-openreview', () => runAdapter(openReviewAdapter, { since, now, venues }))
   },
 )
 
@@ -44,9 +42,7 @@ export const ingestOpenReviewManual = inngest.createFunction(
       parsedSince ??
       (seed ? monthsAgo(env.INGESTION_SEED_MONTHS, now) : new Date(now.getTime() - ONE_DAY_MS * 14))
     const venues = readVenuesFromEnv()
-    return step.run('run-openreview', () =>
-      runAdapter(openReviewAdapter, { since, now, venues }),
-    )
+    return step.run('run-openreview', () => runAdapter(openReviewAdapter, { since, now, venues }))
   },
 )
 

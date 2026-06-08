@@ -10,6 +10,7 @@
 Two new actions on every paper card: **Save** (bookmark for later) and **Read** (toggle done/not-done). Saved papers get their own route at `/saved`. Read papers stay in the main feed but visually dim so the eye skips past them on scan-through. State persists across reloads — no auth, single-user (matches Phase A spec).
 
 **Success shape:**
+
 1. Click the bookmark icon on a paper card → icon fills in → reload → still filled.
 2. Open `/saved` → see only saved papers, in save order (most recent first).
 3. Click the read checkbox on a paper card → card dims → still dim after reload → unchecking restores full opacity.
@@ -50,41 +51,41 @@ Two new actions on every paper card: **Save** (bookmark for later) and **Read** 
 
 ## Existing state (post-A5, already in repo)
 
-| Piece | File | Status |
-|---|---|---|
-| `user_saves` table | `src/lib/db/schema.ts:86-98` | ✅ exists, cascade-delete from `papers` |
-| `read_status` table | `src/lib/db/schema.ts:100-113` | ✅ exists, cascade-delete from `papers` |
-| `read_status_value` enum | `src/lib/db/schema.ts:31-36` | ✅ 4 values; A6 only uses `read`/`unread` |
-| `listRecentPapers` | `src/lib/db/queries/papers.ts` | ✅ extend with LEFT JOINs |
-| `PaperWithHighlight` | `src/types/paper.ts` | ✅ rename / extend to `PaperWithUserState` |
-| `PaperCard` | `src/components/feed/PaperCard.tsx` | ✅ add actions row, accept new props |
-| `FilterPanel`, `SearchInput`, `PaperList`, `EmptyState` | `src/components/...` | ✅ reuse on `/saved` |
-| API route pattern | `src/app/api/health/route.ts` (template) | ✅ follow same shape |
+| Piece                                                   | File                                     | Status                                     |
+| ------------------------------------------------------- | ---------------------------------------- | ------------------------------------------ |
+| `user_saves` table                                      | `src/lib/db/schema.ts:86-98`             | ✅ exists, cascade-delete from `papers`    |
+| `read_status` table                                     | `src/lib/db/schema.ts:100-113`           | ✅ exists, cascade-delete from `papers`    |
+| `read_status_value` enum                                | `src/lib/db/schema.ts:31-36`             | ✅ 4 values; A6 only uses `read`/`unread`  |
+| `listRecentPapers`                                      | `src/lib/db/queries/papers.ts`           | ✅ extend with LEFT JOINs                  |
+| `PaperWithHighlight`                                    | `src/types/paper.ts`                     | ✅ rename / extend to `PaperWithUserState` |
+| `PaperCard`                                             | `src/components/feed/PaperCard.tsx`      | ✅ add actions row, accept new props       |
+| `FilterPanel`, `SearchInput`, `PaperList`, `EmptyState` | `src/components/...`                     | ✅ reuse on `/saved`                       |
+| API route pattern                                       | `src/app/api/health/route.ts` (template) | ✅ follow same shape                       |
 
 ## Deliverables
 
-| # | File | Purpose |
-|---|---|---|
-| 1 | `src/types/paper.ts` (modified) | Rename `PaperWithHighlight` → `PaperWithUserState = PaperWithHighlight & { isSaved: boolean; isRead: boolean }`. (Keep `PaperWithHighlight` as the intermediate type for the SQL projection; export both.) |
-| 2 | `src/lib/db/queries/papers.ts` (modified) | `listRecentPapers` adds LEFT JOIN on `user_saves` and `read_status`; returns `PaperWithUserState[]`. |
-| 3 | `src/lib/db/queries/saved-papers.ts` (new) | `listSavedPapers({ filters })` — same shape as `listRecentPapers` but INNER JOIN on `user_saves`, ORDER BY `saved_at DESC` when no explicit sort. |
-| 4 | `src/lib/db/queries/saves.ts` (new) | `setSaved(paperId, saved)` and `setReadStatus(paperId, isRead)` — pure DB mutations, returning `{ ok: true }`. Both idempotent. |
-| 5 | `src/app/api/saves/route.ts` (new) | `POST` handler: Zod-validate body, call `setSaved`, return `{ ok: true }`. |
-| 6 | `src/app/api/read-status/route.ts` (new) | `POST` handler: Zod-validate body, call `setReadStatus`, return `{ ok: true }`. |
-| 7 | `src/components/paper-actions/SaveButton.tsx` (new) | Client component, optimistic toggle, `aria-pressed`. |
-| 8 | `src/components/paper-actions/ReadToggle.tsx` (new) | Client component, optimistic toggle, `aria-checked`. |
-| 9 | `src/components/paper-actions/paper-actions.css` (new) | Layout for the actions row, button styles, focus ring. |
-| 10 | `src/components/feed/PaperCard.tsx` (modified) | Render actions row; apply `.paper-card-read` when `isRead`. |
-| 11 | `src/components/feed/feed.css` (modified) | Add `.paper-card-read` dim styles + tokens (`--read-opacity`, `--read-saturate`). |
-| 12 | `src/app/saved/page.tsx` (new) | Saved-papers view; reuses FilterPanel + SearchInput + PaperList. |
-| 13 | `src/components/nav/FeedNav.tsx` (new) | Two-link nav (`Feed` / `Saved`) with `aria-current="page"`. |
-| 14 | `src/app/page.tsx` + `src/app/saved/page.tsx` | Render `<FeedNav>` above the page header. |
-| 15 | `src/app/saved/empty-state.tsx` or extend `EmptyState` | Add `nothing-saved` variant. |
-| 16 | `tests/unit/saves-api.test.ts` (new) | API route handlers — happy path, bad input, idempotency. |
-| 17 | `tests/unit/list-papers.test.ts` (modified) | Assert `isSaved`/`isRead` projected; LEFT JOIN present. |
-| 18 | `tests/unit/saved-papers-query.test.ts` (new) | INNER JOIN on `user_saves`; order by `saved_at DESC` when no explicit sort. |
-| 19 | `tests/unit/save-button.test.tsx` + `read-toggle.test.tsx` (new) | aria-pressed/aria-checked toggle; click calls fetch with right body. |
-| 20 | `tests/e2e/saved.spec.ts` (new) | Best-effort: click save → navigate `/saved` → see paper. Skip gracefully if DB unreachable. |
+| #   | File                                                             | Purpose                                                                                                                                                                                                    |
+| --- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `src/types/paper.ts` (modified)                                  | Rename `PaperWithHighlight` → `PaperWithUserState = PaperWithHighlight & { isSaved: boolean; isRead: boolean }`. (Keep `PaperWithHighlight` as the intermediate type for the SQL projection; export both.) |
+| 2   | `src/lib/db/queries/papers.ts` (modified)                        | `listRecentPapers` adds LEFT JOIN on `user_saves` and `read_status`; returns `PaperWithUserState[]`.                                                                                                       |
+| 3   | `src/lib/db/queries/saved-papers.ts` (new)                       | `listSavedPapers({ filters })` — same shape as `listRecentPapers` but INNER JOIN on `user_saves`, ORDER BY `saved_at DESC` when no explicit sort.                                                          |
+| 4   | `src/lib/db/queries/saves.ts` (new)                              | `setSaved(paperId, saved)` and `setReadStatus(paperId, isRead)` — pure DB mutations, returning `{ ok: true }`. Both idempotent.                                                                            |
+| 5   | `src/app/api/saves/route.ts` (new)                               | `POST` handler: Zod-validate body, call `setSaved`, return `{ ok: true }`.                                                                                                                                 |
+| 6   | `src/app/api/read-status/route.ts` (new)                         | `POST` handler: Zod-validate body, call `setReadStatus`, return `{ ok: true }`.                                                                                                                            |
+| 7   | `src/components/paper-actions/SaveButton.tsx` (new)              | Client component, optimistic toggle, `aria-pressed`.                                                                                                                                                       |
+| 8   | `src/components/paper-actions/ReadToggle.tsx` (new)              | Client component, optimistic toggle, `aria-checked`.                                                                                                                                                       |
+| 9   | `src/components/paper-actions/paper-actions.css` (new)           | Layout for the actions row, button styles, focus ring.                                                                                                                                                     |
+| 10  | `src/components/feed/PaperCard.tsx` (modified)                   | Render actions row; apply `.paper-card-read` when `isRead`.                                                                                                                                                |
+| 11  | `src/components/feed/feed.css` (modified)                        | Add `.paper-card-read` dim styles + tokens (`--read-opacity`, `--read-saturate`).                                                                                                                          |
+| 12  | `src/app/saved/page.tsx` (new)                                   | Saved-papers view; reuses FilterPanel + SearchInput + PaperList.                                                                                                                                           |
+| 13  | `src/components/nav/FeedNav.tsx` (new)                           | Two-link nav (`Feed` / `Saved`) with `aria-current="page"`.                                                                                                                                                |
+| 14  | `src/app/page.tsx` + `src/app/saved/page.tsx`                    | Render `<FeedNav>` above the page header.                                                                                                                                                                  |
+| 15  | `src/app/saved/empty-state.tsx` or extend `EmptyState`           | Add `nothing-saved` variant.                                                                                                                                                                               |
+| 16  | `tests/unit/saves-api.test.ts` (new)                             | API route handlers — happy path, bad input, idempotency.                                                                                                                                                   |
+| 17  | `tests/unit/list-papers.test.ts` (modified)                      | Assert `isSaved`/`isRead` projected; LEFT JOIN present.                                                                                                                                                    |
+| 18  | `tests/unit/saved-papers-query.test.ts` (new)                    | INNER JOIN on `user_saves`; order by `saved_at DESC` when no explicit sort.                                                                                                                                |
+| 19  | `tests/unit/save-button.test.tsx` + `read-toggle.test.tsx` (new) | aria-pressed/aria-checked toggle; click calls fetch with right body.                                                                                                                                       |
+| 20  | `tests/e2e/saved.spec.ts` (new)                                  | Best-effort: click save → navigate `/saved` → see paper. Skip gracefully if DB unreachable.                                                                                                                |
 
 ## Contracts
 
@@ -102,6 +103,7 @@ export type PaperWithUserState = PaperWithHighlight & {
 ### API routes
 
 `POST /api/saves`
+
 ```typescript
 // Body
 { paperId: string, saved: boolean }
@@ -112,6 +114,7 @@ export type PaperWithUserState = PaperWithHighlight & {
 ```
 
 `POST /api/read-status`
+
 ```typescript
 // Body
 { paperId: string, status: 'read' | 'unread' }
@@ -126,9 +129,7 @@ Both are idempotent — calling `saved: true` twice or `status: 'read'` twice pr
 ### `listSavedPapers` signature
 
 ```typescript
-export async function listSavedPapers(
-  options: ListOptions = {}
-): Promise<PaperWithUserState[]>
+export async function listSavedPapers(options: ListOptions = {}): Promise<PaperWithUserState[]>
 ```
 
 Reuses every filter A4/A5 added. The only structural difference vs `listRecentPapers`: INNER JOIN on `user_saves` and default ORDER BY `user_saves.saved_at DESC` when `sortBy === null`. Explicit sort (`'newest'`, `'relevance'`) overrides.

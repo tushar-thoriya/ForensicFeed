@@ -1,4 +1,4 @@
-@import './tokens.css';
+@import url('./tokens.css');
 
 *,
 *::before,
@@ -14,7 +14,7 @@ body {
   background: var(--color-surface);
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizelegibility;
 }
 
 body {

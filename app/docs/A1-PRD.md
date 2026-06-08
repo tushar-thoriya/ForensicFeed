@@ -34,30 +34,30 @@ arXiv papers on image forgery detection flow end-to-end from arXiv → Supabase 
 
 ## Existing state (what's already scaffolded)
 
-| Piece | File | Status |
-|---|---|---|
-| arXiv Atom parser + adapter | `src/lib/ingestion/adapters/arxiv.ts` | ✅ Done |
-| Adapter unit tests | `tests/unit/arxiv-adapter.test.ts` | ✅ Done (3 tests) |
-| Adapter fixture | `tests/fixtures/arxiv-feed.xml` | ✅ Done |
-| `runAdapter` orchestrator | `src/lib/ingestion/run.ts` | ✅ Done |
-| `upsertPaper` + `listRecentPapers` | `src/lib/db/queries/papers.ts` | ⚠️ Missing relevance wiring |
-| `startRun` / `finishRun` | `src/lib/db/queries/ingest-runs.ts` | ✅ Done |
-| Inngest client + functions | `src/lib/inngest/client.ts`, `ingest-arxiv.ts` | ✅ Done (daily cron + manual event) |
-| Inngest API handler | `src/app/api/inngest/route.ts` | ✅ Done |
-| Relevance scorer + tagger | `src/lib/ingestion/tagger.ts` | ✅ Done (21/21 tests) |
-| Feed page | `src/app/page.tsx` | ⚠️ Missing relevance threshold |
-| `PaperCard` / `PaperList` | `src/components/feed/` | ⚠️ Needs tag + score display |
+| Piece                              | File                                           | Status                              |
+| ---------------------------------- | ---------------------------------------------- | ----------------------------------- |
+| arXiv Atom parser + adapter        | `src/lib/ingestion/adapters/arxiv.ts`          | ✅ Done                             |
+| Adapter unit tests                 | `tests/unit/arxiv-adapter.test.ts`             | ✅ Done (3 tests)                   |
+| Adapter fixture                    | `tests/fixtures/arxiv-feed.xml`                | ✅ Done                             |
+| `runAdapter` orchestrator          | `src/lib/ingestion/run.ts`                     | ✅ Done                             |
+| `upsertPaper` + `listRecentPapers` | `src/lib/db/queries/papers.ts`                 | ⚠️ Missing relevance wiring         |
+| `startRun` / `finishRun`           | `src/lib/db/queries/ingest-runs.ts`            | ✅ Done                             |
+| Inngest client + functions         | `src/lib/inngest/client.ts`, `ingest-arxiv.ts` | ✅ Done (daily cron + manual event) |
+| Inngest API handler                | `src/app/api/inngest/route.ts`                 | ✅ Done                             |
+| Relevance scorer + tagger          | `src/lib/ingestion/tagger.ts`                  | ✅ Done (21/21 tests)               |
+| Feed page                          | `src/app/page.tsx`                             | ⚠️ Missing relevance threshold      |
+| `PaperCard` / `PaperList`          | `src/components/feed/`                         | ⚠️ Needs tag + score display        |
 
 ## Deliverables
 
-| # | File | Purpose |
-|---|---|---|
-| 1 | `src/lib/db/queries/papers.ts` | Wire `scoreRelevance` + `assignTags` into `upsertPaper`; write `relevanceScore` + `relevanceTags` to DB. Update `listRecentPapers` default threshold. |
-| 2 | `src/app/page.tsx` | Pass `minRelevance: 0.2` when listing papers. |
-| 3 | `src/app/api/ingest/arxiv/route.ts` | `POST` → emits `ingest/arxiv.manual` Inngest event; accepts optional `{ seed: true }` in body for 6-month seed. |
-| 4 | `src/components/feed/PaperCard.tsx` | Show title, authors, venue/year, abstract preview, relevance score, tag badges, links. |
-| 5 | `src/components/feed/feed.css` | Styles for score badge + tag chips. |
-| 6 | `tests/unit/upsert-paper.test.ts` | Verify `upsertPaper` stores computed score and tags; re-score on update. |
+| #   | File                                | Purpose                                                                                                                                               |
+| --- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `src/lib/db/queries/papers.ts`      | Wire `scoreRelevance` + `assignTags` into `upsertPaper`; write `relevanceScore` + `relevanceTags` to DB. Update `listRecentPapers` default threshold. |
+| 2   | `src/app/page.tsx`                  | Pass `minRelevance: 0.2` when listing papers.                                                                                                         |
+| 3   | `src/app/api/ingest/arxiv/route.ts` | `POST` → emits `ingest/arxiv.manual` Inngest event; accepts optional `{ seed: true }` in body for 6-month seed.                                       |
+| 4   | `src/components/feed/PaperCard.tsx` | Show title, authors, venue/year, abstract preview, relevance score, tag badges, links.                                                                |
+| 5   | `src/components/feed/feed.css`      | Styles for score badge + tag chips.                                                                                                                   |
+| 6   | `tests/unit/upsert-paper.test.ts`   | Verify `upsertPaper` stores computed score and tags; re-score on update.                                                                              |
 
 ## Contracts
 
@@ -80,6 +80,7 @@ Content-Type: application/json
 ```
 
 Response (envelope from `common/patterns.md`):
+
 ```json
 { "success": true, "data": { "eventId": "..." } }
 ```

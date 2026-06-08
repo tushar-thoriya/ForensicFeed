@@ -28,19 +28,14 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export function createManualIngestHandler(eventName: string) {
-  return async function POST(
-    request: Request,
-  ): Promise<NextResponse<TriggerResponse>> {
+  return async function POST(request: Request): Promise<NextResponse<TriggerResponse>> {
     const expected = getEnv().INGEST_TRIGGER_SECRET
     // When INGEST_TRIGGER_SECRET is unset the route stays callable in dev.
     // Production deploy (A8) will require the env var via env-prod.ts.
     if (expected) {
       const provided = request.headers.get('x-ingest-secret') ?? ''
       if (!safeEqual(provided, expected)) {
-        return NextResponse.json(
-          { success: false, error: 'unauthorized' },
-          { status: 401 },
-        )
+        return NextResponse.json({ success: false, error: 'unauthorized' }, { status: 401 })
       }
     }
 

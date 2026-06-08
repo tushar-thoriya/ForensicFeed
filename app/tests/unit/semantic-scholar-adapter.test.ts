@@ -118,18 +118,14 @@ describe('semanticScholarAdapter.fetch', () => {
     expect(papers.map((p) => p.title)).toContain(
       'Localizing Copy-Move Forgery in Passport Document Images',
     )
-    expect(
-      papers.map((p) => p.title).includes('Old Survey on Image Forensics'),
-    ).toBe(false)
+    expect(papers.map((p) => p.title).includes('Old Survey on Image Forensics')).toBe(false)
     // Dedup across keyword queries: each fixture paper appears at most once.
     const titles = papers.map((p) => p.title)
     expect(new Set(titles).size).toBe(titles.length)
   })
 
   it('throws when every keyword query fails', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response('boom', { status: 500 }),
-    )
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('boom', { status: 500 }))
     await expect(
       semanticScholarAdapter.fetch({
         since: new Date('2026-01-01T00:00:00Z'),

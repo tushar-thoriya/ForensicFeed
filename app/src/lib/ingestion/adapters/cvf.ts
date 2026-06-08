@@ -144,7 +144,8 @@ async function fetchVenue(venueCode: string): Promise<NormalisedPaper[]> {
     const response = await fetch(url, {
       headers: {
         Accept: 'text/html',
-        'User-Agent': 'forensicfeed-research-tracker (+https://github.com/tushar-thoriya/ForensicFeed)',
+        'User-Agent':
+          'forensicfeed-research-tracker (+https://github.com/tushar-thoriya/ForensicFeed)',
       },
       signal: controller.signal,
     })

@@ -144,17 +144,13 @@ async function fetchOnce(query: string, apiKey: string | null): Promise<Normalis
   try {
     const response = await fetch(url, { headers, signal: controller.signal })
     if (!response.ok) {
-      throw new Error(
-        `Semantic Scholar API returned ${response.status}: ${response.statusText}`,
-      )
+      throw new Error(`Semantic Scholar API returned ${response.status}: ${response.statusText}`)
     }
     const json = (await response.json()) as unknown
     return parseSemanticScholarSearch(json)
   } catch (error: unknown) {
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(
-        `Semantic Scholar API timed out after ${S2_FETCH_TIMEOUT_MS}ms`,
-      )
+      throw new Error(`Semantic Scholar API timed out after ${S2_FETCH_TIMEOUT_MS}ms`)
     }
     throw error
   } finally {
@@ -174,7 +170,7 @@ export const semanticScholarAdapter: Adapter = {
     // disable env lookup, e.g. in tests). Only fall through to env when the
     // caller didn't pass `apiKey` at all.
     const apiKey =
-      providedKey !== undefined ? providedKey : getEnv().SEMANTIC_SCHOLAR_API_KEY ?? null
+      providedKey !== undefined ? providedKey : (getEnv().SEMANTIC_SCHOLAR_API_KEY ?? null)
     const throttleMs = apiKey ? 0 : 1100
 
     const seen = new Map<string, NormalisedPaper>()
@@ -185,8 +181,7 @@ export const semanticScholarAdapter: Adapter = {
       try {
         batch = await fetchOnce(query, apiKey)
       } catch (error) {
-        lastError =
-          error instanceof Error ? error : new Error('unknown S2 error')
+        lastError = error instanceof Error ? error : new Error('unknown S2 error')
         if (throttleMs > 0) await sleep(throttleMs)
         continue
       }

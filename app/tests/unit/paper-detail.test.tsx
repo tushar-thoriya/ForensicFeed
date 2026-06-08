@@ -45,10 +45,7 @@ function makePaper(overrides: Partial<PaperWithUserState> = {}): PaperWithUserSt
 
 describe('PaperDetail', () => {
   beforeEach(() => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response('{"ok":true}', { status: 200 })),
-    )
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{"ok":true}', { status: 200 })))
   })
   afterEach(() => {
     cleanup()
@@ -57,9 +54,7 @@ describe('PaperDetail', () => {
 
   it('renders the title and full author list (no truncation)', () => {
     const { getByRole, getByText } = render(<PaperDetail paper={makePaper()} />)
-    expect(getByRole('heading', { level: 1 }).textContent).toContain(
-      'Image forgery localization',
-    )
+    expect(getByRole('heading', { level: 1 }).textContent).toContain('Image forgery localization')
     // All 4 authors should be present — detail page does not truncate.
     expect(getByText(/A\. One, B\. Two, C\. Three, D\. Four/)).toBeTruthy()
   })

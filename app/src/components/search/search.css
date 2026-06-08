@@ -29,7 +29,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 1px 0 oklch(0% 0 0 / 0.02);
+  box-shadow: 0 1px 0 oklch(0% 0 0deg / 0.02);
   outline: none;
   transition:
     border-color var(--duration-fast) var(--ease-out-expo),
@@ -47,6 +47,10 @@
 
 .search-input-field::-webkit-search-cancel-button,
 .search-input-field::-webkit-search-decoration {
+  /* -webkit-appearance is required to hide Safari's native search ✕ on these
+     -webkit- pseudo-elements; the standard `appearance` alone doesn't, so we
+     keep the prefix and silence the rule here on purpose. */
+  /* stylelint-disable-next-line property-no-vendor-prefix */
   -webkit-appearance: none;
   appearance: none;
 }
@@ -59,6 +63,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   /* 44×44 hit area per CLAUDE.md §8 (touch target floor). The visible
      glyph stays at 22px; the larger box absorbs imprecise taps. */
   width: 44px;

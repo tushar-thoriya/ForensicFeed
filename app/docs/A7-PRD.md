@@ -14,6 +14,7 @@ Two things, shipped together:
 2. **A design pass that makes the surface look like a research tool, not a default card grid.** Editorial direction: serif headings, mono meta, real typographic hierarchy, refined focus rings, deliberate spacing rhythm. Passes the anti-template check in `~/.claude/rules/web/design-quality.md`.
 
 **Success shape:**
+
 1. Click a paper title in the feed → land on `/papers/[id]` with full abstract and all metadata visible above the fold on a 1440px viewport.
 2. Save/read toggles on the detail page mutate the same backend state as the feed; reload preserves it.
 3. A 1024px screenshot of `/` reads like a research tool — title hierarchy is obvious at a glance, meta line uses mono, accent colour reserved for action/state not decoration.
@@ -92,6 +93,7 @@ Two things, shipped together:
 ## File map
 
 **New:**
+
 - `src/app/papers/[id]/page.tsx`
 - `src/components/paper-detail/PaperDetail.tsx`
 - `src/components/paper-detail/paper-detail.css`
@@ -99,6 +101,7 @@ Two things, shipped together:
 - `tests/unit/paper-detail.test.tsx` (light — render shape only, no DB)
 
 **Modified:**
+
 - `src/lib/db/queries/papers.ts` — add `getPaperById`
 - `src/styles/tokens.css` — add typography + focus-ring tokens
 - `src/components/feed/PaperCard.tsx` — title now `<Link>` to `/papers/[id]`; mono meta; serif title
@@ -109,4 +112,4 @@ Two things, shipped together:
 
 ## Why this scope (not more)
 
-A7 is the design pass + the missing structural piece (detail page). I considered adding view transitions, a related-papers panel, and BibTeX export. All three are real value but each one is its own surface — they belong in B-phase or A9. Shipping a tight A7 that nails *typography and a stable per-paper URL* is the highest-leverage move because every subsequent feature (summaries, related papers, notes) hangs off the detail page.
+A7 is the design pass + the missing structural piece (detail page). I considered adding view transitions, a related-papers panel, and BibTeX export. All three are real value but each one is its own surface — they belong in B-phase or A9. Shipping a tight A7 that nails _typography and a stable per-paper URL_ is the highest-leverage move because every subsequent feature (summaries, related papers, notes) hangs off the detail page.

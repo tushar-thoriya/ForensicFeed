@@ -53,9 +53,7 @@ vi.mock('@/lib/db/client', () => {
     return {
       set: (patch: Partial<PaperRow>) => ({
         where: async (pred: (row: PaperRow) => boolean) => {
-          store.rows = store.rows.map((row) =>
-            pred(row) ? { ...row, ...patch } : row,
-          )
+          store.rows = store.rows.map((row) => (pred(row) ? { ...row, ...patch } : row))
         },
       }),
     }
@@ -83,8 +81,10 @@ vi.mock('drizzle-orm', async () => {
       row[column.key] === value
   return {
     eq,
-    and: (...preds: Array<(row: PaperRow) => boolean>) =>
-      (row: PaperRow) => preds.every((p) => p(row)),
+    and:
+      (...preds: Array<(row: PaperRow) => boolean>) =>
+      (row: PaperRow) =>
+        preds.every((p) => p(row)),
     desc: (col: unknown) => col,
     gte: () => () => true,
     sql: () => null,

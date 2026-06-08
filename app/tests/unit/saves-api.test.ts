@@ -58,9 +58,7 @@ describe('POST /api/saves', () => {
   })
 
   it('returns 400 on empty paperId', async () => {
-    const res = await savesPOST(
-      postRequest('http://x/api/saves', { paperId: '', saved: true }),
-    )
+    const res = await savesPOST(postRequest('http://x/api/saves', { paperId: '', saved: true }))
     expect(res.status).toBe(400)
     expect(setSaved).not.toHaveBeenCalled()
   })
@@ -84,9 +82,7 @@ describe('POST /api/saves', () => {
   })
 
   it('is idempotent on repeated identical calls (handler does not throw)', async () => {
-    await savesPOST(
-      postRequest('http://x/api/saves', { paperId: 'arxiv:1', saved: true }),
-    )
+    await savesPOST(postRequest('http://x/api/saves', { paperId: 'arxiv:1', saved: true }))
     const second = await savesPOST(
       postRequest('http://x/api/saves', { paperId: 'arxiv:1', saved: true }),
     )

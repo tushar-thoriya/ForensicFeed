@@ -83,18 +83,14 @@
   color: var(--color-accent);
 }
 
-/* Read cards dim so the eye skips past them on scan-through. Hover and
-   keyboard focus restore opacity so the card is still clearly usable —
-   we want to fade, not hide. */
-.paper-card-read {
-  opacity: var(--read-opacity, 0.55);
-  filter: saturate(var(--read-saturate, 0.85));
-}
-
-.paper-card-read:hover,
-.paper-card-read:focus-within {
-  opacity: 0.95;
-  filter: saturate(1);
+/* Read cards are de-emphasized by softening the title rather than dimming the
+   whole card. An opacity/saturate fade dragged the card's meta and abstract
+   text below the WCAG AA 4.5:1 contrast minimum (the muted tokens sit right at
+   threshold, so any fade fails). The feed's base colors all pass at full
+   opacity, so a read card stays compliant while reading visibly "quieter". */
+.paper-card-read .paper-card-title-link {
+  color: var(--color-text-secondary);
+  font-weight: 400;
 }
 
 .paper-card-meta {
@@ -222,7 +218,7 @@
   color: var(--color-text-secondary);
 }
 
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
   .feed-shell {
     padding-inline: var(--space-xl);
   }

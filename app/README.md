@@ -9,14 +9,14 @@
 
 Phases shipped: **A1 → A7**. Up next: A8 (production deploy + CSP + monitoring).
 
-| Capability | Where |
-|---|---|
-| Multi-source ingest (arXiv, HF, Semantic Scholar, CVF, OpenReview) | `src/lib/ingestion/` + Inngest cron |
-| Relevance scoring + auto-tagging | `src/lib/ingestion/tagger.ts` |
-| Filter sidebar with URL-as-state | `src/components/filters/` |
+| Capability                                                                                          | Where                                                                                        |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Multi-source ingest (arXiv, HF, Semantic Scholar, CVF, OpenReview)                                  | `src/lib/ingestion/` + Inngest cron                                                          |
+| Relevance scoring + auto-tagging                                                                    | `src/lib/ingestion/tagger.ts`                                                                |
+| Filter sidebar with URL-as-state                                                                    | `src/components/filters/`                                                                    |
 | Full-text search (Postgres `tsvector` + GIN, ranked by `ts_rank_cd`, highlighted via `ts_headline`) | `src/components/search/`, `src/lib/search/`, `drizzle/migrations/0003_add_search_vector.sql` |
-| Save + read-status tracking (optimistic toggles, `/saved` view, inline dim) | `src/components/paper-actions/`, `src/app/saved/`, `src/lib/db/queries/saves.ts` |
-| Paper detail page + editorial design pass (serif hero, mono meta, eyebrow masthead) | `src/app/papers/[id]/`, `src/components/paper-detail/`, `src/styles/tokens.css` |
+| Save + read-status tracking (optimistic toggles, `/saved` view, inline dim)                         | `src/components/paper-actions/`, `src/app/saved/`, `src/lib/db/queries/saves.ts`             |
+| Paper detail page + editorial design pass (serif hero, mono meta, eyebrow masthead)                 | `src/app/papers/[id]/`, `src/components/paper-detail/`, `src/styles/tokens.css`              |
 
 ## Quick start
 

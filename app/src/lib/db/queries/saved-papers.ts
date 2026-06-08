@@ -34,7 +34,9 @@ export async function listSavedPapers(
   // \x03) must stay in sync with render-highlight.tsx in either case.
   const headlineExpr =
     filters.searchQuery !== null
-      ? sql<string | null>`ts_headline('english', coalesce(${papers.title}, '') || ' ' || coalesce(${papers.abstract}, ''), websearch_to_tsquery('english', ${filters.searchQuery}), 'StartSel=\x02,StopSel=\x03,MaxWords=35,MinWords=15,MaxFragments=1')`
+      ? sql<
+          string | null
+        >`ts_headline('english', coalesce(${papers.title}, '') || ' ' || coalesce(${papers.abstract}, ''), websearch_to_tsquery('english', ${filters.searchQuery}), 'StartSel=\x02,StopSel=\x03,MaxWords=35,MinWords=15,MaxFragments=1')`
       : sql<string | null>`null::text`
 
   // Default ORDER BY for the saved view is by save-recency. buildOrderBy
@@ -85,8 +87,6 @@ export async function listSavedPapers(
 }
 
 export async function countSavedPapers(): Promise<number> {
-  const [row] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(userSaves)
+  const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(userSaves)
   return row?.count ?? 0
 }

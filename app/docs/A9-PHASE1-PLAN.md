@@ -1,15 +1,19 @@
 # Plan: A9 Phase 1 — Browser Matrix + E2E Smoke Coverage
 
 ## Summary
+
 Trim the Playwright project matrix to Chrome + desktop Safari + mobile Safari (drop Firefox, Pixel 5, and the redundant 320px Chrome project), then add smoke E2E coverage for the two currently-uncovered critical flows: opening a paper detail page, and toggling save + read status. Save/read assertions run on the **detail page** (a single instance of each control) to avoid ambiguous multi-card locators on the feed.
 
 ## User Story
+
 As the single user of ForensicFeed, I want one local `pnpm e2e` run on Chrome + Safari + mobile Safari to confirm the feed, filters, search, paper-detail, and save/read flows all work, so that I can push changes without silently breaking the tool.
 
 ## Problem → Solution
+
 Today the E2E suite runs on 6 projects (incl. low-value Firefox/Pixel) and never exercises paper-detail navigation or the save/read toggles → A focused 3-project matrix with deterministic smoke tests for every critical path.
 
 ## Metadata
+
 - **Complexity**: Small (2 files: 1 config edit, 1 new spec)
 - **Source PRD**: `app/docs/A9-PRD.md`
 - **PRD Phase**: Phase 1 — Browser matrix + E2E smoke
@@ -22,23 +26,24 @@ Today the E2E suite runs on 6 projects (incl. low-value Firefox/Pixel) and never
 Internal change — no user-facing UX transformation. This phase adds tests and trims test config only; it ships no product code.
 
 ### Interaction Changes
-| Touchpoint | Before | After | Notes |
-|---|---|---|---|
+
+| Touchpoint | Before                                   | After                                                                        | Notes                            |
+| ---------- | ---------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------- |
 | `pnpm e2e` | 6 browser projects, no detail/save tests | 3 projects (Chrome, desktop Safari, mobile Safari), full critical-path smoke | Faster, focused, covers the gaps |
 
 ---
 
 ## Mandatory Reading
 
-| Priority | File | Lines | Why |
-|---|---|---|---|
-| P0 | `playwright.config.ts` | all | The `projects[]` array to edit |
-| P0 | `tests/e2e/home.spec.ts` | all | Empty-DB tolerance pattern + viewport handling to mirror |
-| P0 | `tests/e2e/search.spec.ts` | all | `waitForURL` + role-locator + deterministic-wait conventions |
-| P1 | `src/components/feed/PaperCard.tsx` | 60-110 | Title link selector + save/read placement |
-| P1 | `src/components/paper-detail/PaperDetail.tsx` | 55-110 | Detail page accessible structure (h1, back link, actions) |
-| P1 | `src/components/paper-actions/SaveButton.tsx` | all | Save button role/aria-label/aria-pressed for assertions |
-| P1 | `src/components/paper-actions/ReadToggle.tsx` | all | Read checkbox role + label text for assertions |
+| Priority | File                                          | Lines  | Why                                                          |
+| -------- | --------------------------------------------- | ------ | ------------------------------------------------------------ |
+| P0       | `playwright.config.ts`                        | all    | The `projects[]` array to edit                               |
+| P0       | `tests/e2e/home.spec.ts`                      | all    | Empty-DB tolerance pattern + viewport handling to mirror     |
+| P0       | `tests/e2e/search.spec.ts`                    | all    | `waitForURL` + role-locator + deterministic-wait conventions |
+| P1       | `src/components/feed/PaperCard.tsx`           | 60-110 | Title link selector + save/read placement                    |
+| P1       | `src/components/paper-detail/PaperDetail.tsx` | 55-110 | Detail page accessible structure (h1, back link, actions)    |
+| P1       | `src/components/paper-actions/SaveButton.tsx` | all    | Save button role/aria-label/aria-pressed for assertions      |
+| P1       | `src/components/paper-actions/ReadToggle.tsx` | all    | Read checkbox role + label text for assertions               |
 
 ## External Documentation
 
@@ -49,6 +54,7 @@ No external research needed — feature uses established internal Playwright pat
 ## Patterns to Mirror
 
 ### TEST_IMPORTS_AND_SHAPE
+
 ```ts
 // SOURCE: tests/e2e/search.spec.ts:1-6
 import { expect, test } from '@playwright/test'
@@ -63,6 +69,7 @@ test.describe('full-text search', () => {
 ```
 
 ### ROLE_LOCATORS_AND_DETERMINISTIC_WAITS
+
 ```ts
 // SOURCE: tests/e2e/search.spec.ts:8-15
 const input = page.getByRole('searchbox', { name: /search papers/i })
@@ -73,6 +80,7 @@ await page.waitForURL(/[?&]q=forgery/, { timeout: 2000 })
 ```
 
 ### EMPTY_DB_TOLERANCE (critical — DB may have zero papers)
+
 ```ts
 // SOURCE: tests/e2e/home.spec.ts:34-44
 const cards = page.locator('.paper-card')
@@ -83,6 +91,7 @@ expect(cardCount + emptyCount).toBeGreaterThan(0)
 ```
 
 ### PAPER_CARD_TITLE_LINK (entry to detail)
+
 ```tsx
 // SOURCE: src/components/feed/PaperCard.tsx:77-83
 const detailHref = `/papers/${encodeURIComponent(paper.id)}`
@@ -94,6 +103,7 @@ const detailHref = `/papers/${encodeURIComponent(paper.id)}`
 ```
 
 ### DETAIL_PAGE_STRUCTURE (assertion targets)
+
 ```tsx
 // SOURCE: src/components/paper-detail/PaperDetail.tsx:58-76
 <div className="paper-detail-back">
@@ -104,10 +114,11 @@ const detailHref = `/papers/${encodeURIComponent(paper.id)}`
 ```
 
 ### SAVE_BUTTON_A11Y (assertion contract)
+
 ```tsx
 // SOURCE: src/components/paper-actions/SaveButton.tsx:74-80
 <button
-  aria-pressed={saved}                              // "true" | "false"
+  aria-pressed={saved} // "true" | "false"
   aria-label={saved ? 'Unsave paper' : 'Save paper'} // accessible name
 >
   <span className="paper-action-label">{saved ? 'Saved' : 'Save'}</span>
@@ -115,6 +126,7 @@ const detailHref = `/papers/${encodeURIComponent(paper.id)}`
 ```
 
 ### READ_TOGGLE_A11Y (assertion contract)
+
 ```tsx
 // SOURCE: src/components/paper-actions/ReadToggle.tsx:69-79
 <label className="paper-action read-toggle">
@@ -128,9 +140,9 @@ const detailHref = `/papers/${encodeURIComponent(paper.id)}`
 
 ## Files to Change
 
-| File | Action | Justification |
-|---|---|---|
-| `playwright.config.ts` | UPDATE | Trim `projects[]` to chromium + webkit + iPhone 12; drop firefox, Pixel 5, viewport-320 |
+| File                             | Action | Justification                                                                                  |
+| -------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| `playwright.config.ts`           | UPDATE | Trim `projects[]` to chromium + webkit + iPhone 12; drop firefox, Pixel 5, viewport-320        |
 | `tests/e2e/paper-detail.spec.ts` | CREATE | Smoke: navigate feed→detail, render, save toggle, read toggle (single-instance on detail page) |
 
 ## NOT Building
@@ -147,6 +159,7 @@ const detailHref = `/papers/${encodeURIComponent(paper.id)}`
 ## Step-by-Step Tasks
 
 ### Task 1: Trim the Playwright project matrix
+
 - **ACTION**: Edit `playwright.config.ts` `projects[]`.
 - **IMPLEMENT**: Keep exactly three projects:
   ```ts
@@ -163,6 +176,7 @@ const detailHref = `/papers/${encodeURIComponent(paper.id)}`
 - **VALIDATE**: `pnpm exec playwright test --list` shows tests only across the 3 projects.
 
 ### Task 2: Create the paper-detail smoke spec
+
 - **ACTION**: Create `tests/e2e/paper-detail.spec.ts`.
 - **IMPLEMENT**: A `test.describe('paper detail + save/read', ...)` with `test.use({ viewport: { width: 1280, height: 900 } })` and a shared navigation helper. Three tests:
   1. **Navigate feed → detail renders**: `goto('/')`; locate `.paper-card-title-link`; if `count() === 0` → `test.skip(true, 'no papers seeded')`; click `.first()`; `await page.waitForURL(/\/papers\//, { timeout: 2000 })`; assert `getByRole('heading', { level: 1 })` is visible and the back link `getByRole('link', { name: /back to feed/i })` is visible.
@@ -185,13 +199,15 @@ const detailHref = `/papers/${encodeURIComponent(paper.id)}`
 This phase **is** the tests. Validation = the new + existing E2E suite going green.
 
 ### E2E Tests Added
-| Test | Action | Expected | Edge Case? |
-|---|---|---|---|
-| feed → detail renders | click first card title | URL `/papers/...`, h1 + back link visible | skips if 0 cards |
-| save toggle | click save twice | aria-pressed flips then restores | disabled-while-pending |
-| read toggle | click checkbox twice | checked flips then restores | disabled-while-pending |
+
+| Test                  | Action                 | Expected                                  | Edge Case?             |
+| --------------------- | ---------------------- | ----------------------------------------- | ---------------------- |
+| feed → detail renders | click first card title | URL `/papers/...`, h1 + back link visible | skips if 0 cards       |
+| save toggle           | click save twice       | aria-pressed flips then restores          | disabled-while-pending |
+| read toggle           | click checkbox twice   | checked flips then restores               | disabled-while-pending |
 
 ### Edge Cases Checklist
+
 - [x] Empty DB (no papers) → detail tests `test.skip` cleanly
 - [x] Multiple cards → `.first()` avoids strict-mode locator violation
 - [x] Optimistic pending disable → assert via auto-waiting `expect`
@@ -203,42 +219,54 @@ This phase **is** the tests. Validation = the new + existing E2E suite going gre
 ## Validation Commands
 
 ### Static Analysis
+
 ```bash
 cd app && pnpm typecheck
 ```
+
 EXPECT: Zero type errors.
 
 ### Lint
+
 ```bash
 cd app && pnpm lint
 ```
+
 EXPECT: Zero errors.
 
 ### List projects (confirm matrix trim)
+
 ```bash
 cd app && pnpm exec playwright test --list
 ```
+
 EXPECT: Tests enumerated only under `chromium`, `webkit`, `mobile-safari`.
 
 ### Run the new spec
+
 ```bash
 cd app && pnpm exec playwright test paper-detail.spec.ts
 ```
+
 EXPECT: All pass (or skip if DB empty).
 
 ### Full E2E suite
+
 ```bash
 cd app && pnpm e2e
 ```
+
 EXPECT: All specs green across the 3 projects; no regressions in home/filters/search.
 
 ### Manual Validation
+
 - [ ] `pnpm dev` running; `pnpm e2e` green locally on Chrome, desktop Safari, mobile Safari
 - [ ] After the run, no stray saved/read papers left behind (toggle-back worked)
 
 ---
 
 ## Acceptance Criteria
+
 - [ ] `playwright.config.ts` has exactly 3 projects (chromium, webkit, mobile-safari)
 - [ ] `tests/e2e/paper-detail.spec.ts` covers navigate→detail, save toggle, read toggle
 - [ ] `pnpm e2e` green across all 3 projects
@@ -246,6 +274,7 @@ EXPECT: All specs green across the 3 projects; no regressions in home/filters/se
 - [ ] Existing home/filters/search specs still pass
 
 ## Completion Checklist
+
 - [ ] Code follows discovered Playwright patterns (role locators, `waitForURL`, empty-DB tolerance)
 - [ ] No fixed `sleep`/`waitForTimeout` — deterministic waits only
 - [ ] Tests leave DB state unchanged (toggle-back)
@@ -253,13 +282,15 @@ EXPECT: All specs green across the 3 projects; no regressions in home/filters/se
 - [ ] Self-contained — no further codebase searching needed
 
 ## Risks
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Local DB empty during run → detail tests skip, reducing coverage | M | M | Run against seeded local dev DB; skip is explicit, not a false pass |
-| WebKit flakiness on optimistic refresh | M | L | Auto-waiting `expect`, no fixed timeouts, toggle-back between asserts |
-| Removing viewport-320 loses narrowest overflow check | L | L | 390px overflow still asserted in home.spec; documented trade-off |
+
+| Risk                                                             | Likelihood | Impact | Mitigation                                                            |
+| ---------------------------------------------------------------- | ---------- | ------ | --------------------------------------------------------------------- |
+| Local DB empty during run → detail tests skip, reducing coverage | M          | M      | Run against seeded local dev DB; skip is explicit, not a false pass   |
+| WebKit flakiness on optimistic refresh                           | M          | L      | Auto-waiting `expect`, no fixed timeouts, toggle-back between asserts |
+| Removing viewport-320 loses narrowest overflow check             | L          | L      | 390px overflow still asserted in home.spec; documented trade-off      |
 
 ## Notes
+
 - Components live under `src/components/paper-actions/` and `src/components/paper-detail/` (CLAUDE.md's §5 lists an older `paper/` path — the codebase is the source of truth).
 - `papers/[id]/page.tsx` already calls `notFound()` for missing papers and handles `getPaperById` errors inline — relevant context for PRD Phase 2 (error/404 screens), not this phase.
 - After this plan completes, run `/prp-plan app/docs/A9-PRD.md` again to plan Phase 2 (failure screens) and Phase 3 (a11y sweep).

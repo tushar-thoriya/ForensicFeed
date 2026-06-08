@@ -38,34 +38,34 @@ The feed becomes filterable. From a desktop sidebar (or mobile bottom sheet), I 
 
 ## Existing state (post-A3, already in repo)
 
-| Piece | File | Status |
-|---|---|---|
-| `scoreRelevance` + `assignTags` engine | `src/lib/ingestion/tagger.ts` | ✅ 21 tests; HIGH/MED/LOW keyword tiers; 12 tags |
-| Score + tags written on upsert | `src/lib/db/queries/papers.ts:50` | ✅ Every ingested paper auto-scored + auto-tagged |
-| `relevanceScore` real column + index | `src/lib/db/schema.ts:68,81` | ✅ `papers_relevance_idx` exists |
-| `relevanceTags` array column | `src/lib/db/schema.ts` | ✅ Stored as `text[]` |
-| Feed page with `minRelevance: 0.2` gate | `src/app/page.tsx:14` | ✅ Threshold from `Ideas V4.md §5` |
-| `PaperList` server-rendered | `src/components/feed/PaperList.tsx` | ✅ Reuse as-is |
-| `PaperCard` shows score, tags, venue badge | `src/components/feed/PaperCard.tsx` | ✅ Reuse as-is |
-| Source enum (8 sources), VenueType enum (5) | `src/lib/db/schema.ts:14,22` | ✅ Both feed the filter dimensions |
+| Piece                                       | File                                | Status                                            |
+| ------------------------------------------- | ----------------------------------- | ------------------------------------------------- |
+| `scoreRelevance` + `assignTags` engine      | `src/lib/ingestion/tagger.ts`       | ✅ 21 tests; HIGH/MED/LOW keyword tiers; 12 tags  |
+| Score + tags written on upsert              | `src/lib/db/queries/papers.ts:50`   | ✅ Every ingested paper auto-scored + auto-tagged |
+| `relevanceScore` real column + index        | `src/lib/db/schema.ts:68,81`        | ✅ `papers_relevance_idx` exists                  |
+| `relevanceTags` array column                | `src/lib/db/schema.ts`              | ✅ Stored as `text[]`                             |
+| Feed page with `minRelevance: 0.2` gate     | `src/app/page.tsx:14`               | ✅ Threshold from `Ideas V4.md §5`                |
+| `PaperList` server-rendered                 | `src/components/feed/PaperList.tsx` | ✅ Reuse as-is                                    |
+| `PaperCard` shows score, tags, venue badge  | `src/components/feed/PaperCard.tsx` | ✅ Reuse as-is                                    |
+| Source enum (8 sources), VenueType enum (5) | `src/lib/db/schema.ts:14,22`        | ✅ Both feed the filter dimensions                |
 
 ## Deliverables
 
-| # | File | Purpose |
-|---|---|---|
-| 1 | `src/types/filter.ts` (new) | `FilterState`, `SortBy` types; `EMPTY_FILTERS` constant. |
-| 2 | `src/lib/filters/parse.ts` (new) | `parseFilterParams(searchParams) → FilterState`; `serialiseFilters(state) → URLSearchParams`. |
-| 3 | `tests/unit/filter-parse.test.ts` (new) | Round-trip; junk rejection; empty state; CSV multi-value. |
-| 4 | `src/lib/db/queries/papers.ts` (modified) | Extend `ListOptions` with filter dimensions; add `sortBy`; convert single-value `gte` chain into `and(...)` of all conditions. |
-| 5 | `tests/unit/list-papers.test.ts` (new) | Each filter dimension narrows results; `sortBy: 'relevance'` orders by score desc; `hasCode` true/false; multi-tag = OR. |
-| 6 | `src/components/filters/FilterSidebar.tsx` (new) | Desktop sidebar; section accordion; checkbox groups; sort radio. |
-| 7 | `src/components/filters/FilterSheet.tsx` (new) | Mobile bottom-sheet wrapper; reuses sidebar internals. |
-| 8 | `src/components/filters/FilterChips.tsx` (new) | Active-filter chips row; "Clear all" button. |
-| 9 | `src/components/filters/filters.css` (new) | Sidebar layout, sheet animation, chip styling — token-driven, AA contrast. |
-| 10 | `src/components/feed/EmptyState.tsx` (new, small) | Reusable empty-state for "no results" with optional CTA. |
-| 11 | `src/app/page.tsx` (modified) | Read `searchParams`, parse to `FilterState`, pass to `listRecentPapers`, render sidebar + chips + list. |
-| 12 | `src/app/(feed)/layout.tsx` (new, optional) | If route grouping needed for sidebar layout — only if `page.tsx` solo gets unwieldy. |
-| 13 | `tests/e2e/filters.spec.ts` (new) | Toggle has-code, verify URL + result count; clear-all returns to default; mobile sheet open/close. |
+| #   | File                                              | Purpose                                                                                                                        |
+| --- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | `src/types/filter.ts` (new)                       | `FilterState`, `SortBy` types; `EMPTY_FILTERS` constant.                                                                       |
+| 2   | `src/lib/filters/parse.ts` (new)                  | `parseFilterParams(searchParams) → FilterState`; `serialiseFilters(state) → URLSearchParams`.                                  |
+| 3   | `tests/unit/filter-parse.test.ts` (new)           | Round-trip; junk rejection; empty state; CSV multi-value.                                                                      |
+| 4   | `src/lib/db/queries/papers.ts` (modified)         | Extend `ListOptions` with filter dimensions; add `sortBy`; convert single-value `gte` chain into `and(...)` of all conditions. |
+| 5   | `tests/unit/list-papers.test.ts` (new)            | Each filter dimension narrows results; `sortBy: 'relevance'` orders by score desc; `hasCode` true/false; multi-tag = OR.       |
+| 6   | `src/components/filters/FilterSidebar.tsx` (new)  | Desktop sidebar; section accordion; checkbox groups; sort radio.                                                               |
+| 7   | `src/components/filters/FilterSheet.tsx` (new)    | Mobile bottom-sheet wrapper; reuses sidebar internals.                                                                         |
+| 8   | `src/components/filters/FilterChips.tsx` (new)    | Active-filter chips row; "Clear all" button.                                                                                   |
+| 9   | `src/components/filters/filters.css` (new)        | Sidebar layout, sheet animation, chip styling — token-driven, AA contrast.                                                     |
+| 10  | `src/components/feed/EmptyState.tsx` (new, small) | Reusable empty-state for "no results" with optional CTA.                                                                       |
+| 11  | `src/app/page.tsx` (modified)                     | Read `searchParams`, parse to `FilterState`, pass to `listRecentPapers`, render sidebar + chips + list.                        |
+| 12  | `src/app/(feed)/layout.tsx` (new, optional)       | If route grouping needed for sidebar layout — only if `page.tsx` solo gets unwieldy.                                           |
+| 13  | `tests/e2e/filters.spec.ts` (new)                 | Toggle has-code, verify URL + result count; clear-all returns to default; mobile sheet open/close.                             |
 
 ## Contracts
 
@@ -75,12 +75,12 @@ The feed becomes filterable. From a desktop sidebar (or mobile bottom sheet), I 
 type SortBy = 'newest' | 'relevance'
 
 interface FilterState {
-  sources: PaperSource[]      // empty = all
-  venueTypes: VenueType[]     // empty = all
-  years: number[]             // empty = all
-  tags: Tag[]                 // empty = all (OR within tags)
-  hasCode: boolean | null     // null = either; true = code only; false = no-code only
-  sortBy: SortBy              // default 'newest'
+  sources: PaperSource[] // empty = all
+  venueTypes: VenueType[] // empty = all
+  years: number[] // empty = all
+  tags: Tag[] // empty = all (OR within tags)
+  hasCode: boolean | null // null = either; true = code only; false = no-code only
+  sortBy: SortBy // default 'newest'
 }
 
 // Discriminated identifier for chip-removal callback
@@ -88,7 +88,7 @@ type FilterDimension = 'source' | 'venueType' | 'year' | 'tag' | 'hasCode'
 
 interface RemoveFilterArgs {
   dimension: FilterDimension
-  value: string | number | null   // null only for hasCode toggle-off
+  value: string | number | null // null only for hasCode toggle-off
 }
 ```
 
@@ -96,14 +96,14 @@ interface RemoveFilterArgs {
 
 ### URL contract
 
-| Param | Format | Example |
-|---|---|---|
-| `source` | CSV | `?source=arxiv,cvf` |
-| `venueType` | CSV | `?venueType=conference` |
-| `year` | CSV ints | `?year=2024,2025` |
-| `tag` | CSV | `?tag=localization,deepfake` |
-| `hasCode` | `1` / `0` / absent | `?hasCode=1` |
-| `sort` | `newest` (default) / `relevance` | `?sort=relevance` |
+| Param       | Format                           | Example                      |
+| ----------- | -------------------------------- | ---------------------------- |
+| `source`    | CSV                              | `?source=arxiv,cvf`          |
+| `venueType` | CSV                              | `?venueType=conference`      |
+| `year`      | CSV ints                         | `?year=2024,2025`            |
+| `tag`       | CSV                              | `?tag=localization,deepfake` |
+| `hasCode`   | `1` / `0` / absent               | `?hasCode=1`                 |
+| `sort`      | `newest` (default) / `relevance` | `?sort=relevance`            |
 
 Parser rejects unknown enum values silently (drops them) rather than throwing — keeps the page resilient to bad pasted URLs.
 
@@ -112,14 +112,14 @@ Parser rejects unknown enum values silently (drops them) rather than throwing �
 ```typescript
 interface ListOptions {
   limit?: number
-  minRelevance?: number       // existing
-  since?: Date                // existing
+  minRelevance?: number // existing
+  since?: Date // existing
   sources?: PaperSource[]
   venueTypes?: VenueType[]
   years?: number[]
   tags?: Tag[]
   hasCode?: boolean | null
-  sortBy?: 'newest' | 'relevance'   // default 'newest'
+  sortBy?: 'newest' | 'relevance' // default 'newest'
 }
 ```
 

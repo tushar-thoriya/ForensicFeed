@@ -9,7 +9,7 @@
 }
 
 .feed-nav-link {
-  color: var(--color-text-muted, oklch(55% 0 0));
+  color: var(--color-text-muted, oklch(55% 0 0deg));
   text-decoration: none;
   padding-bottom: 2px;
   border-bottom: 1px solid transparent;
@@ -17,16 +17,16 @@
 }
 
 .feed-nav-link:hover {
-  color: var(--color-text-primary, oklch(18% 0 0));
+  color: var(--color-text-primary, oklch(18% 0 0deg));
 }
 
 .feed-nav-link-active {
-  color: var(--color-text-primary, oklch(18% 0 0));
-  border-bottom-color: var(--color-accent, oklch(55% 0.18 250));
+  color: var(--color-text-primary, oklch(18% 0 0deg));
+  border-bottom-color: var(--color-accent, oklch(55% 0.18 250deg));
 }
 
 .feed-nav-link:focus-visible {
-  outline: 2px solid var(--color-accent, oklch(55% 0.18 250));
+  outline: 2px solid var(--color-accent, oklch(55% 0.18 250deg));
   outline-offset: 3px;
   border-radius: 2px;
 }

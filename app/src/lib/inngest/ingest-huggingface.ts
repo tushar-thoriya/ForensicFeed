@@ -14,9 +14,7 @@ export const ingestHuggingfaceDaily = inngest.createFunction(
   async ({ step }) => {
     const now = new Date()
     const since = new Date(now.getTime() - ONE_DAY_MS * 2)
-    return step.run('run-huggingface', () =>
-      runAdapter(huggingfaceAdapter, { since, now }),
-    )
+    return step.run('run-huggingface', () => runAdapter(huggingfaceAdapter, { since, now }))
   },
 )
 
@@ -30,9 +28,7 @@ export const ingestHuggingfaceManual = inngest.createFunction(
     const since =
       parsedSince ??
       (seed ? monthsAgo(env.INGESTION_SEED_MONTHS, now) : new Date(now.getTime() - ONE_DAY_MS * 2))
-    return step.run('run-huggingface', () =>
-      runAdapter(huggingfaceAdapter, { since, now }),
-    )
+    return step.run('run-huggingface', () => runAdapter(huggingfaceAdapter, { since, now }))
   },
 )
 

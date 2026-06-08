@@ -10,13 +10,14 @@ Each phase ends with `pnpm vitest run` (and where relevant `pnpm typecheck`) gre
 
 ### Phase 1 — Filter types + URL parser (TDD)
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 1.1 | Define `FilterState`, `SortBy`, `EMPTY_FILTERS` | `src/types/filter.ts` (new) | Compiles; exported types reused everywhere |
-| 1.2 | Write parser/serialiser unit tests (RED) | `tests/unit/filter-parse.test.ts` (new) | Tests fail because parser doesn't exist |
-| 1.3 | Implement `parseFilterParams` + `serialiseFilters` | `src/lib/filters/parse.ts` (new) | All parser tests green; typecheck clean |
+| Step | Task                                               | File                                    | Gate                                       |
+| ---- | -------------------------------------------------- | --------------------------------------- | ------------------------------------------ |
+| 1.1  | Define `FilterState`, `SortBy`, `EMPTY_FILTERS`    | `src/types/filter.ts` (new)             | Compiles; exported types reused everywhere |
+| 1.2  | Write parser/serialiser unit tests (RED)           | `tests/unit/filter-parse.test.ts` (new) | Tests fail because parser doesn't exist    |
+| 1.3  | Implement `parseFilterParams` + `serialiseFilters` | `src/lib/filters/parse.ts` (new)        | All parser tests green; typecheck clean    |
 
 **Test cases** (1.2):
+
 - Empty `URLSearchParams` → `EMPTY_FILTERS`
 - `?source=arxiv,cvf` → `sources: ['arxiv', 'cvf']`
 - `?tag=localization,deepfake&hasCode=1` → both tags + `hasCode: true`
@@ -30,13 +31,14 @@ Each phase ends with `pnpm vitest run` (and where relevant `pnpm typecheck`) gre
 
 ### Phase 2 — Extend `listRecentPapers` (TDD)
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 2.1 | Write new query unit tests (RED) | `tests/unit/list-papers.test.ts` (new) | Fails — new options not implemented yet |
-| 2.2 | Extend `ListOptions` + apply filters in WHERE — **tag filter uses jsonb `?\|` operator (not `arrayOverlaps`); column is jsonb at schema:69** | `src/lib/db/queries/papers.ts` (modify) | All query tests green; existing upsert tests still green; verified against real Postgres (not mocked) |
-| 2.3 | Add `getDistinctYears()` helper for year-multiselect source | `src/lib/db/queries/papers.ts` (modify) | Returns sorted desc array of int years |
+| Step | Task                                                                                                                                         | File                                    | Gate                                                                                                  |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 2.1  | Write new query unit tests (RED)                                                                                                             | `tests/unit/list-papers.test.ts` (new)  | Fails — new options not implemented yet                                                               |
+| 2.2  | Extend `ListOptions` + apply filters in WHERE — **tag filter uses jsonb `?\|` operator (not `arrayOverlaps`); column is jsonb at schema:69** | `src/lib/db/queries/papers.ts` (modify) | All query tests green; existing upsert tests still green; verified against real Postgres (not mocked) |
+| 2.3  | Add `getDistinctYears()` helper for year-multiselect source                                                                                  | `src/lib/db/queries/papers.ts` (modify) | Returns sorted desc array of int years                                                                |
 
 **Test cases** (2.1):
+
 - `sources: ['arxiv']` narrows to arxiv-source rows only
 - `venueTypes: ['conference']` narrows to conference rows
 - `years: [2024, 2025]` narrows by year
@@ -55,15 +57,16 @@ These tests use the existing test DB seeding pattern (already used by `multi-sou
 
 ### Phase 3 — Filter UI components
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 3.1 | Build `FilterChips` (active-filter chips + clear-all) | `src/components/filters/FilterChips.tsx` (new) | Renders chips from `FilterState`; chip click invokes `onRemove` callback |
-| 3.2 | Build `FilterSidebar` with section fieldsets + sort radio | `src/components/filters/FilterSidebar.tsx` (new) | Client component; uses `useRouter`/`useSearchParams`; updates URL on change |
-| 3.3 | Build `FilterSheet` mobile bottom-sheet wrapper | `src/components/filters/FilterSheet.tsx` (new) | Uses `<dialog>`; trigger button shown `< 1024px`; reuses sidebar internals |
-| 3.4 | Build `EmptyState` reusable component | `src/components/feed/EmptyState.tsx` (new, small) | Variant prop: `'no-papers' \| 'no-matches'`; "Clear filters" link variant |
-| 3.5 | Add filters CSS (sidebar layout, sheet animation, chips) | `src/components/filters/filters.css` (new) | Token-driven; AA contrast; respects `prefers-reduced-motion` |
+| Step | Task                                                      | File                                              | Gate                                                                        |
+| ---- | --------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------- |
+| 3.1  | Build `FilterChips` (active-filter chips + clear-all)     | `src/components/filters/FilterChips.tsx` (new)    | Renders chips from `FilterState`; chip click invokes `onRemove` callback    |
+| 3.2  | Build `FilterSidebar` with section fieldsets + sort radio | `src/components/filters/FilterSidebar.tsx` (new)  | Client component; uses `useRouter`/`useSearchParams`; updates URL on change |
+| 3.3  | Build `FilterSheet` mobile bottom-sheet wrapper           | `src/components/filters/FilterSheet.tsx` (new)    | Uses `<dialog>`; trigger button shown `< 1024px`; reuses sidebar internals  |
+| 3.4  | Build `EmptyState` reusable component                     | `src/components/feed/EmptyState.tsx` (new, small) | Variant prop: `'no-papers' \| 'no-matches'`; "Clear filters" link variant   |
+| 3.5  | Add filters CSS (sidebar layout, sheet animation, chips)  | `src/components/filters/filters.css` (new)        | Token-driven; AA contrast; respects `prefers-reduced-motion`                |
 
 **Component contracts** (3.1–3.4):
+
 - `FilterChips({ filters, onClear })` — pure presentational; `onClear(key, value)` for individual chip removal, `onClearAll()` to reset.
 - `FilterSidebar({ filters, sources, venueTypes, years, tags })` — owns navigation; accepts canonical option lists as props (not fetched inside component).
 - `FilterSheet({ children })` — wraps `FilterSidebar` in a `<dialog>` on mobile; sidebar content used as-is.
@@ -71,57 +74,57 @@ These tests use the existing test DB seeding pattern (already used by `multi-sou
 
 ### Phase 4 — Page wiring
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 4.1 | Read + parse `searchParams` in `page.tsx` | `src/app/page.tsx` (modify) | Filters round-trip from URL → query → render |
-| 4.2 | Compose layout: sidebar (≥1024px) / sheet trigger (<1024px) + chips + list | `src/app/page.tsx` (modify) | Visual layout matches PRD shape |
-| 4.3 | Replace static "newest first" line with sort indicator | `src/app/page.tsx` (modify) | Reflects `sortBy` value |
-| 4.4 | Use `EmptyState` for filtered-empty vs default-empty | `src/app/page.tsx` (modify) | "Clear filters" link visible only when ≥1 filter active |
+| Step | Task                                                                       | File                        | Gate                                                    |
+| ---- | -------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------- |
+| 4.1  | Read + parse `searchParams` in `page.tsx`                                  | `src/app/page.tsx` (modify) | Filters round-trip from URL → query → render            |
+| 4.2  | Compose layout: sidebar (≥1024px) / sheet trigger (<1024px) + chips + list | `src/app/page.tsx` (modify) | Visual layout matches PRD shape                         |
+| 4.3  | Replace static "newest first" line with sort indicator                     | `src/app/page.tsx` (modify) | Reflects `sortBy` value                                 |
+| 4.4  | Use `EmptyState` for filtered-empty vs default-empty                       | `src/app/page.tsx` (modify) | "Clear filters" link visible only when ≥1 filter active |
 
 ### Phase 5 — E2E test (Playwright)
 
-| Step | Task | File | Gate |
-|---|---|---|---|
-| 5.1 | Write filter E2E test | `tests/e2e/filters.spec.ts` (new) | Test: open feed, toggle has-code, verify URL + result count drops; clear-all returns home |
-| 5.2 | Mobile viewport test: open sheet, apply filter, sheet closes | same file | iPhone 14 viewport (390×844) |
+| Step | Task                                                         | File                              | Gate                                                                                      |
+| ---- | ------------------------------------------------------------ | --------------------------------- | ----------------------------------------------------------------------------------------- |
+| 5.1  | Write filter E2E test                                        | `tests/e2e/filters.spec.ts` (new) | Test: open feed, toggle has-code, verify URL + result count drops; clear-all returns home |
+| 5.2  | Mobile viewport test: open sheet, apply filter, sheet closes | same file                         | iPhone 14 viewport (390×844)                                                              |
 
 These exercise the dev server (`pnpm dev` running). Skip in CI if Playwright not configured; gate them behind `pnpm e2e` script.
 
 ### Phase 6 — Quality gates
 
-| Step | Task | Gate |
-|---|---|---|
-| 6.1 | `pnpm typecheck` | Clean |
-| 6.2 | `pnpm lint` | Clean |
-| 6.3 | `pnpm test:ci` | All tests green; A4 unit tests added without regressing 115 existing |
-| 6.4 | `pnpm build` | Production build succeeds; First Load JS still under 150 KB budget |
-| 6.5 | Parallel reviewer sweep: `code-reviewer` + `typescript-reviewer` | No CRITICAL/HIGH open |
-| 6.6 | `a11y-architect` sweep on FilterSidebar, FilterSheet, FilterChips | Fieldset/legend semantics, focus trap, contrast, keyboard nav all green |
+| Step | Task                                                              | Gate                                                                    |
+| ---- | ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 6.1  | `pnpm typecheck`                                                  | Clean                                                                   |
+| 6.2  | `pnpm lint`                                                       | Clean                                                                   |
+| 6.3  | `pnpm test:ci`                                                    | All tests green; A4 unit tests added without regressing 115 existing    |
+| 6.4  | `pnpm build`                                                      | Production build succeeds; First Load JS still under 150 KB budget      |
+| 6.5  | Parallel reviewer sweep: `code-reviewer` + `typescript-reviewer`  | No CRITICAL/HIGH open                                                   |
+| 6.6  | `a11y-architect` sweep on FilterSidebar, FilterSheet, FilterChips | Fieldset/legend semantics, focus trap, contrast, keyboard nav all green |
 
 ### Phase 7 — Commit + checkpoint
 
-| Step | Task |
-|---|---|
-| 7.1 | Conventional commit: `feat(feed): add filter sidebar, URL-as-state, sort-by-relevance toggle` |
-| 7.2 | Push to `origin/main` |
-| 7.3 | Update memory: write `a4-progress.md`, demote `a3-progress.md`, refresh `MEMORY.md` |
+| Step | Task                                                                                          |
+| ---- | --------------------------------------------------------------------------------------------- |
+| 7.1  | Conventional commit: `feat(feed): add filter sidebar, URL-as-state, sort-by-relevance toggle` |
+| 7.2  | Push to `origin/main`                                                                         |
+| 7.3  | Update memory: write `a4-progress.md`, demote `a3-progress.md`, refresh `MEMORY.md`           |
 
 ## File estimate
 
-| File | Type | Est. lines |
-|---|---|---|
-| `src/types/filter.ts` | new | ~30 |
-| `src/lib/filters/parse.ts` | new | ~120 |
-| `tests/unit/filter-parse.test.ts` | new | ~150 |
-| `src/lib/db/queries/papers.ts` | modify | +60 |
-| `tests/unit/list-papers.test.ts` | new | ~220 |
-| `src/components/filters/FilterChips.tsx` | new | ~80 |
-| `src/components/filters/FilterSidebar.tsx` | new | ~220 |
-| `src/components/filters/FilterSheet.tsx` | new | ~90 |
-| `src/components/filters/filters.css` | new | ~180 |
-| `src/components/feed/EmptyState.tsx` | new | ~40 |
-| `src/app/page.tsx` | modify | +60 |
-| `tests/e2e/filters.spec.ts` | new | ~120 |
+| File                                       | Type   | Est. lines |
+| ------------------------------------------ | ------ | ---------- |
+| `src/types/filter.ts`                      | new    | ~30        |
+| `src/lib/filters/parse.ts`                 | new    | ~120       |
+| `tests/unit/filter-parse.test.ts`          | new    | ~150       |
+| `src/lib/db/queries/papers.ts`             | modify | +60        |
+| `tests/unit/list-papers.test.ts`           | new    | ~220       |
+| `src/components/filters/FilterChips.tsx`   | new    | ~80        |
+| `src/components/filters/FilterSidebar.tsx` | new    | ~220       |
+| `src/components/filters/FilterSheet.tsx`   | new    | ~90        |
+| `src/components/filters/filters.css`       | new    | ~180       |
+| `src/components/feed/EmptyState.tsx`       | new    | ~40        |
+| `src/app/page.tsx`                         | modify | +60        |
+| `tests/e2e/filters.spec.ts`                | new    | ~120       |
 
 **No file approaches the 800-line cap.** Heaviest is `FilterSidebar.tsx` at ~220 lines; well under target.
 

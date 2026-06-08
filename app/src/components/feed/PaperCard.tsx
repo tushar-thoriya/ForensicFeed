@@ -55,9 +55,7 @@ export function PaperCard({ paper }: PaperCardProps) {
   const externalHref = pdfHref(paper)
   const titleId = `paper-${paper.id}-title`
   const citationCount =
-    typeof paper.citationCount === 'number' && paper.citationCount > 0
-      ? paper.citationCount
-      : null
+    typeof paper.citationCount === 'number' && paper.citationCount > 0 ? paper.citationCount : null
 
   const cardClass = paper.isRead ? 'paper-card paper-card-read' : 'paper-card'
 

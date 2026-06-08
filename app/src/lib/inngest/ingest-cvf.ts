@@ -30,9 +30,7 @@ export const ingestCvfWeekly = inngest.createFunction(
     // missed week is harmless.
     const since = new Date(now.getTime() - ONE_DAY_MS * 14)
     const venues = readVenuesFromEnv()
-    return step.run('run-cvf', () =>
-      runAdapter(cvfAdapter, { since, now, venues }),
-    )
+    return step.run('run-cvf', () => runAdapter(cvfAdapter, { since, now, venues }))
   },
 )
 
@@ -47,9 +45,7 @@ export const ingestCvfManual = inngest.createFunction(
       parsedSince ??
       (seed ? monthsAgo(env.INGESTION_SEED_MONTHS, now) : new Date(now.getTime() - ONE_DAY_MS * 14))
     const venues = readVenuesFromEnv()
-    return step.run('run-cvf', () =>
-      runAdapter(cvfAdapter, { since, now, venues }),
-    )
+    return step.run('run-cvf', () => runAdapter(cvfAdapter, { since, now, venues }))
   },
 )
 

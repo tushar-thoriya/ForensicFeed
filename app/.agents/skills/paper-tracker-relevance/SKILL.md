@@ -22,8 +22,8 @@ interface RelevanceInput {
 }
 
 interface RelevanceResult {
-  score: number        // 0.0–1.0 (cap 1.0, floor 0.0)
-  tags: string[]       // subset of TAG_ORDER, deterministic order
+  score: number // 0.0–1.0 (cap 1.0, floor 0.0)
+  tags: string[] // subset of TAG_ORDER, deterministic order
 }
 ```
 
@@ -36,11 +36,11 @@ interface RelevanceResult {
 
 ## Weight table
 
-| Tier | Title weight | Abstract weight | Keywords |
-|---|---|---|---|
-| High | +0.4 | +0.2 | forgery detection · tamper detection · manipulation detection · image forensics · forgery localization · splicing detection · copy-move detection · inpainting detection · document authentication · document verification · ID document · passport forgery |
-| Medium | +0.2 | +0.1 | image integrity · deepfake detection · face swap detection · GAN detection · AI-generated image · pixel-level segmentation · anomaly localization · passive authentication · PRNU · noise analysis · watermark detection |
-| Low | 0 | +0.05 | image authenticity · digital forensics · image manipulation · steganalysis |
+| Tier   | Title weight | Abstract weight | Keywords                                                                                                                                                                                                                                                    |
+| ------ | ------------ | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| High   | +0.4         | +0.2            | forgery detection · tamper detection · manipulation detection · image forensics · forgery localization · splicing detection · copy-move detection · inpainting detection · document authentication · document verification · ID document · passport forgery |
+| Medium | +0.2         | +0.1            | image integrity · deepfake detection · face swap detection · GAN detection · AI-generated image · pixel-level segmentation · anomaly localization · passive authentication · PRNU · noise analysis · watermark detection                                    |
+| Low    | 0            | +0.05           | image authenticity · digital forensics · image manipulation · steganalysis                                                                                                                                                                                  |
 
 - **Score cap:** 1.0.
 - **Default-feed threshold:** 0.2. Papers with score < 0.2 are **stored** but hidden from the default feed. Enforced at query time, not at the scorer.
@@ -51,20 +51,20 @@ interface RelevanceResult {
 
 Canonical order (returned by `assignTags` in this order):
 
-| # | Tag | Trigger keywords (case-insensitive substring) |
-|---|---|---|
-| 1 | `copy-move` | copy-move · copy move · duplication detection |
-| 2 | `splicing` | splicing · splice · composite image |
-| 3 | `inpainting` | inpainting · removal detection · object removal |
-| 4 | `localization` | localization · segmentation mask · pixel-level · region-level |
-| 5 | `document` | document · passport · ID card · driving license · national ID · OVD |
-| 6 | `text-manipulation` | text region · OCR tampering · text forgery · altered text |
-| 7 | `deepfake` | deepfake · face swap · face manipulation · face forgery |
-| 8 | `gan-detection` | GAN detection · AI-generated · synthetic image · generative |
-| 9 | `passive-auth` | passive authentication · no watermark · blind detection |
-| 10 | `forensics` | image forensics · digital forensics · PRNU · noise analysis |
-| 11 | `transformer` | transformer · ViT · attention-based |
-| 12 | `diffusion` | diffusion model · DDPM |
+| #   | Tag                 | Trigger keywords (case-insensitive substring)                       |
+| --- | ------------------- | ------------------------------------------------------------------- |
+| 1   | `copy-move`         | copy-move · copy move · duplication detection                       |
+| 2   | `splicing`          | splicing · splice · composite image                                 |
+| 3   | `inpainting`        | inpainting · removal detection · object removal                     |
+| 4   | `localization`      | localization · segmentation mask · pixel-level · region-level       |
+| 5   | `document`          | document · passport · ID card · driving license · national ID · OVD |
+| 6   | `text-manipulation` | text region · OCR tampering · text forgery · altered text           |
+| 7   | `deepfake`          | deepfake · face swap · face manipulation · face forgery             |
+| 8   | `gan-detection`     | GAN detection · AI-generated · synthetic image · generative         |
+| 9   | `passive-auth`      | passive authentication · no watermark · blind detection             |
+| 10  | `forensics`         | image forensics · digital forensics · PRNU · noise analysis         |
+| 11  | `transformer`       | transformer · ViT · attention-based                                 |
+| 12  | `diffusion`         | diffusion model · DDPM                                              |
 
 Tag triggers may match either title OR abstract. Each tag is added at most once, even if multiple triggers fire.
 

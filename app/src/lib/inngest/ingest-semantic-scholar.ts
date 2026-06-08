@@ -36,7 +36,4 @@ export const ingestSemanticScholarManual = inngest.createFunction(
   },
 )
 
-export const semanticScholarFunctions = [
-  ingestSemanticScholarDaily,
-  ingestSemanticScholarManual,
-]
+export const semanticScholarFunctions = [ingestSemanticScholarDaily, ingestSemanticScholarManual]

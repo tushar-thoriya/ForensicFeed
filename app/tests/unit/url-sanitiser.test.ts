@@ -15,9 +15,7 @@ describe('sanitiseExternalUrl', () => {
   })
 
   it('passes http URLs through', () => {
-    expect(sanitiseExternalUrl('http://example.com/paper.pdf')).toBe(
-      'http://example.com/paper.pdf',
-    )
+    expect(sanitiseExternalUrl('http://example.com/paper.pdf')).toBe('http://example.com/paper.pdf')
   })
 
   it('rejects javascript: scheme', () => {
