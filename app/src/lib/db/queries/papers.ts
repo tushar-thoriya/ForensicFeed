@@ -12,6 +12,13 @@ import {
   DEFAULT_FEED_LIMIT,
   MAX_FEED_LIMIT,
 } from '@/lib/db/queries/list-papers-query'
+import {
+  buildDigestConditions,
+  clampDigestLimit,
+  DIGEST_ORDER_BY,
+  type BuildDigestQueryInput,
+  type DigestPaper,
+} from '@/lib/db/queries/digest-query'
 
 const SOURCE_SET = new Set<string>(SOURCE_VALUES)
 const VENUE_TYPE_SET = new Set<string>(VENUE_TYPE_VALUES)
@@ -277,4 +284,36 @@ export async function getFilterFacets(): Promise<FilterFacets> {
     .filter((v): v is VenueType => VENUE_TYPE_SET.has(v))
 
   return { sources, venueTypes, years }
+}
+
+// Weekly digest executor — runs the pure digest builder's conditions against
+// the live DB. Content-only projection (no saved/read LEFT JOINs, no search
+// headline). Returns [] when nothing matches; the digest job branches to the
+// "quiet week" note on an empty result. Mirrors listRecentPapers' shape.
+export async function fetchWeeklyDigestPapers(
+  input: BuildDigestQueryInput,
+): Promise<DigestPaper[]> {
+  const conditions = buildDigestConditions(input)
+  const limit = clampDigestLimit(input.limit)
+
+  const rows = await db
+    .select({
+      id: papers.id,
+      title: papers.title,
+      authors: papers.authors,
+      venue: papers.venue,
+      venueType: papers.venueType,
+      relevanceScore: papers.relevanceScore,
+      relevanceTags: papers.relevanceTags,
+      pdfUrl: papers.pdfUrl,
+      arxivId: papers.arxivId,
+      publishedDate: papers.publishedDate,
+      createdAt: papers.createdAt,
+    })
+    .from(papers)
+    .where(and(...conditions))
+    .orderBy(...DIGEST_ORDER_BY)
+    .limit(limit)
+
+  return rows
 }

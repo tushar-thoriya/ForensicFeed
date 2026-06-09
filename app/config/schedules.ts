@@ -40,6 +40,7 @@ const PRESETS = {
   WEEKLY_MONDAY_6AM: '0 6 * * 1',
   WEEKLY_MONDAY_7AM: '0 7 * * 1',
   WEEKLY_MONDAY_7_30AM: '30 7 * * 1',
+  WEEKLY_MONDAY_8AM: '0 8 * * 1',
   WEEKLY_SUNDAY_6AM: '0 6 * * 0',
   MONTHLY_FIRST_6AM: '0 6 1 * *',
 } as const
@@ -61,6 +62,9 @@ export const SCHEDULES = {
 
   // OpenReview (ICLR/NeurIPS) — conference cycle, weekly is plenty
   openReview: PRESETS.WEEKLY_MONDAY_7_30AM,
+
+  // Weekly email digest (B2) — Monday morning, after the weekend's papers land
+  digest: PRESETS.WEEKLY_MONDAY_8AM,
 } as const
 
 export type ScheduleKey = keyof typeof SCHEDULES

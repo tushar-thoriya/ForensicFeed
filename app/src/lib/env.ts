@@ -29,6 +29,13 @@ const serverSchema = z.object({
   INGESTION_DAILY_LLM_TOKEN_BUDGET: z.coerce.number().int().nonnegative().default(100_000),
 
   RESEND_API_KEY: optionalString(),
+  // Where the weekly digest email is sent. Optional so local dev/test boot
+  // without it; production presence is enforced in the digest job (B2 Phase 3/4).
+  // Server-only — a recipient address must never reach the browser bundle.
+  DIGEST_RECIPIENT: z.preprocess(emptyToUndefined, z.string().email().optional()),
+  // Digest sender address. Optional — defaults to Resend's no-domain sender in
+  // lib/email/send.ts. Server-only.
+  DIGEST_FROM: optionalString(),
   SENTRY_DSN: optionalString(),
 })
 
@@ -55,6 +62,8 @@ const processEnv = {
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   INGESTION_DAILY_LLM_TOKEN_BUDGET: process.env.INGESTION_DAILY_LLM_TOKEN_BUDGET,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
+  DIGEST_RECIPIENT: process.env.DIGEST_RECIPIENT,
+  DIGEST_FROM: process.env.DIGEST_FROM,
   SENTRY_DSN: process.env.SENTRY_DSN,
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
