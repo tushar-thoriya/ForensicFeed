@@ -458,6 +458,25 @@ Relevance scoring and keyword taxonomy for image forgery detection papers.
 
 ---
 
+#### `paper-tracker-code-review`
+ForensicFeed-specific review checklist run before every commit/PR. Encodes this repo's invariants on top of the generic reviewer agents.
+
+**Covers:**
+- Surface map (which checklist applies to which changed files)
+- Ingestion adapter isolation, rate limits, robots.txt, paywalled handling
+- Dedup key priority and `published_date` preservation on conflict
+- Drizzle parameterized queries + tsvector/tsquery sanitisation
+- API route Zod validation; `SERVICE_ROLE_KEY` never client-side
+- XSS/SSRF surfaces: URL sanitiser, the single allowed `dangerouslySetInnerHTML`, email HTML escaping
+- Security headers / CSP in `next.config.ts`
+- Frontend a11y, compositor-only animation, design tokens, 390px overflow
+- Size/immutability/error-handling/no-debug gates and the testing matrix
+- Quick grep gate + severity-based approval criteria
+
+**File:** `.agents/skills/paper-tracker-code-review/SKILL.md`
+
+---
+
 ## 11. Sub-Agents
 
 ### Full roster and phase assignment
