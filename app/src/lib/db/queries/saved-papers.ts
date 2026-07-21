@@ -26,7 +26,10 @@ export async function listSavedPapers(
   const { filters = EMPTY_FILTERS, limit = DEFAULT_FEED_LIMIT, minRelevance = 0 } = options
   const clampedLimit = Math.min(Math.max(limit, 1), MAX_FEED_LIMIT)
 
-  const conditions = buildConditions({ filters, minRelevance })
+  // ignoreDomain: the saved view is a personal cross-domain library — it shows
+  // saves from both the forgery and deepfake tabs, so the feed-tab domain in
+  // `filters` must not constrain it.
+  const conditions = buildConditions({ filters, minRelevance, ignoreDomain: true })
 
   // Headline only when searching — same rule as listRecentPapers. Repeating
   // the literal here (rather than importing it) keeps each query file
@@ -68,6 +71,7 @@ export async function listSavedPapers(
       relevanceTags: papers.relevanceTags,
       primarySource: papers.primarySource,
       rawMetadata: papers.rawMetadata,
+      domain: papers.domain,
       createdAt: papers.createdAt,
       headline: headlineExpr,
       // INNER JOIN guarantees user_saves row exists, so this is always true.

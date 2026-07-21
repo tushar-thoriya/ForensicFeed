@@ -122,3 +122,62 @@ describe('upsertPaper — relevance wiring', () => {
     expect(row.relevanceScore).toBeLessThanOrEqual(1.0)
   })
 })
+
+describe('upsertPaper — domain classification', () => {
+  beforeEach(() => {
+    captured.inserted = undefined
+    captured.updated = undefined
+    captured.selectRows = []
+  })
+
+  it('classifies a forgery paper as forgery on insert', async () => {
+    await upsertPaper(makePaper())
+    expect(captured.inserted!.domain).toBe('forgery')
+  })
+
+  it('classifies a deepfake paper as deepfake on insert', async () => {
+    await upsertPaper(
+      makePaper({
+        title: 'Deepfake video detection via face swap artifacts',
+        abstract: 'A benchmark for synthetic face detection.',
+        arxivId: '2605.11111',
+      }),
+    )
+    expect(captured.inserted!.domain).toBe('deepfake')
+  })
+
+  it('honours a deepfake domainHint when no forgery-core keyword overrides it', async () => {
+    await upsertPaper(
+      makePaper({
+        title: 'A New Benchmark for Facial Video Analysis',
+        abstract: 'Large-scale evaluation.',
+        arxivId: '2605.22222',
+        domainHint: 'deepfake',
+      }),
+    )
+    expect(captured.inserted!.domain).toBe('deepfake')
+  })
+
+  it('lets a forgery-core keyword override a deepfake hint', async () => {
+    await upsertPaper(
+      makePaper({
+        title: 'Face forgery localization via image splicing cues',
+        abstract: null,
+        arxivId: '2605.33333',
+        domainHint: 'deepfake',
+      }),
+    )
+    expect(captured.inserted!.domain).toBe('forgery')
+  })
+
+  it('re-computes domain on update', async () => {
+    captured.selectRows = [{ id: 'arxiv:2604.99999' }]
+    await upsertPaper(
+      makePaper({
+        title: 'Deepfake detection with face reenactment cues',
+        abstract: 'Synthetic face analysis.',
+      }),
+    )
+    expect(captured.updated!.domain).toBe('deepfake')
+  })
+})

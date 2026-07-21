@@ -8,6 +8,7 @@ export const SOURCE_LABEL: Record<PaperSource, string> = {
   cvf: 'CVF',
   openreview: 'OpenReview',
   huggingface: 'HF Papers',
+  greatzh: 'Curated (greatzh/papers)',
 }
 
 export const VENUE_TYPE_LABEL: Record<VenueType, string> = {
@@ -40,6 +41,7 @@ export const SOURCE_VALUES: ReadonlyArray<PaperSource> = [
   'cvf',
   'openreview',
   'huggingface',
+  'greatzh',
 ]
 
 export const VENUE_TYPE_VALUES: ReadonlyArray<VenueType> = [

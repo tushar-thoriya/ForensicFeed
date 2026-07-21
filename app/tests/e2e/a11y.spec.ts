@@ -20,6 +20,11 @@ test.describe('accessibility (axe)', () => {
     await expectNoViolations(page)
   })
 
+  test('deepfake domain tab has no axe violations', async ({ page }) => {
+    await page.goto('/?domain=deepfake', { waitUntil: 'domcontentloaded' })
+    await expectNoViolations(page)
+  })
+
   test('paper detail has no axe violations', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' })
     const links = page.locator('.paper-card-title-link')

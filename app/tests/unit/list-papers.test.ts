@@ -105,6 +105,30 @@ describe('buildListPapersQuery — WHERE clause', () => {
     expect(params).toContain('localization')
     expect(params).toContain(0.2)
   })
+
+  it('constrains to the forgery domain by default', () => {
+    const { sql, params } = buildListPapersQuery({ filters: EMPTY_FILTERS, minRelevance: 0 })
+    expect(sql).toMatch(/"domain"/)
+    expect(params).toContain('forgery')
+  })
+
+  it('constrains to the deepfake domain when the tab is deepfake', () => {
+    const { sql, params } = buildListPapersQuery({
+      filters: with_({ domain: 'deepfake' }),
+      minRelevance: 0,
+    })
+    expect(sql).toMatch(/"domain"/)
+    expect(params).toContain('deepfake')
+  })
+
+  it('omits the domain constraint entirely when ignoreDomain is set', () => {
+    const { sql } = buildListPapersQuery({
+      filters: EMPTY_FILTERS,
+      minRelevance: 0,
+      ignoreDomain: true,
+    })
+    expect(sql).not.toMatch(/"domain"/)
+  })
 })
 
 describe('buildListPapersQuery — ORDER BY', () => {
@@ -191,8 +215,10 @@ describe('buildListPapersQuery — full-text search', () => {
   })
 
   it('binds the query string param both in WHERE and ORDER BY when searching with sortBy=null', () => {
+    // domain: 'deepfake' so the domain-condition param does not collide with
+    // the 'forgery' search term we are counting here.
     const { params } = buildListPapersQuery({
-      filters: with_({ searchQuery: 'forgery', sortBy: null }),
+      filters: with_({ searchQuery: 'forgery', sortBy: null, domain: 'deepfake' }),
       minRelevance: 0,
     })
     // The query string should appear twice: once for the WHERE @@ predicate,

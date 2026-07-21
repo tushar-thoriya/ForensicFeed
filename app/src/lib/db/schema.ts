@@ -26,6 +26,7 @@ export const paperSource = pgEnum('paper_source', [
   'cvf',
   'openreview',
   'huggingface',
+  'greatzh',
 ])
 
 export const readStatusValue = pgEnum('read_status_value', [
@@ -36,6 +37,8 @@ export const readStatusValue = pgEnum('read_status_value', [
 ])
 
 export const ingestStatus = pgEnum('ingest_status', ['running', 'success', 'partial', 'failed'])
+
+export const paperDomain = pgEnum('paper_domain', ['forgery', 'deepfake'])
 
 export const papers = pgTable(
   'papers',
@@ -66,6 +69,8 @@ export const papers = pgTable(
     primarySource: paperSource('primary_source').notNull(),
     rawMetadata: jsonb('raw_metadata').$type<Record<string, unknown>>().notNull().default({}),
 
+    domain: paperDomain('domain').notNull().default('forgery'),
+
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
@@ -75,6 +80,7 @@ export const papers = pgTable(
     publishedIdx: index('papers_published_idx').on(t.publishedDate),
     relevanceIdx: index('papers_relevance_idx').on(t.relevanceScore),
     sourceIdx: index('papers_source_idx').on(t.primarySource),
+    domainIdx: index('papers_domain_idx').on(t.domain),
   }),
 )
 

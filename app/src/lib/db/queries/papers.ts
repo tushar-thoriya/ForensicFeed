@@ -1,9 +1,16 @@
 import { and, eq, sql, type SQL } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
 import { papers, readStatus, userSaves, type NewPaper } from '@/lib/db/schema'
-import type { NormalisedPaper, PaperSource, PaperWithUserState, VenueType } from '@/types/paper'
+import type {
+  NormalisedPaper,
+  PaperDomain,
+  PaperSource,
+  PaperWithUserState,
+  VenueType,
+} from '@/types/paper'
 import { titleHash as computeTitleHash } from '@/lib/ingestion/dedup'
 import { assignTags, scoreRelevance } from '@/lib/ingestion/tagger'
+import { classifyDomain } from '@/lib/ingestion/domain'
 import { EMPTY_FILTERS, type FilterState } from '@/types/filter'
 import { SOURCE_VALUES, VENUE_TYPE_VALUES } from '@/lib/filters/labels'
 import {
@@ -61,6 +68,7 @@ export async function upsertPaper(input: NormalisedPaper): Promise<UpsertResult>
   const relevanceInput = { title: input.title, abstract: input.abstract }
   const { score: relevanceScore } = scoreRelevance(relevanceInput)
   const relevanceTags = assignTags(relevanceInput)
+  const domain = classifyDomain(relevanceInput, input.domainHint)
 
   const existing = await findExistingPaper({
     arxivId: input.arxivId,
@@ -74,7 +82,12 @@ export async function upsertPaper(input: NormalisedPaper): Promise<UpsertResult>
     // Build the SET object conditionally so absent fields stay untouched —
     // tsconfig has exactOptionalPropertyTypes: false, so `?? undefined` would
     // otherwise be persisted as SQL NULL.
-    const setFields: Partial<NewPaper> = { relevanceScore, relevanceTags }
+    // `domain` refreshes on every update just like relevanceScore/tags: it's
+    // recomputed from the incoming adapter's title/abstract (+ its domainHint),
+    // so a greatzh re-ingest whose section says 'deepfake' wins on a
+    // cross-source dedup collision — the curator's placement is authoritative,
+    // still subject to classifyDomain's forgery-core overrides.
+    const setFields: Partial<NewPaper> = { relevanceScore, relevanceTags, domain }
     if (input.updatedDate !== null) setFields.updatedDate = input.updatedDate
     if (input.codeUrl !== null) setFields.codeUrl = input.codeUrl
     if (input.citationCount !== null) setFields.citationCount = input.citationCount
@@ -104,6 +117,7 @@ export async function upsertPaper(input: NormalisedPaper): Promise<UpsertResult>
     relevanceTags,
     primarySource: input.primarySource,
     rawMetadata: input.rawMetadata,
+    domain,
   })
   return { inserted: true, paperId: id }
 }
@@ -184,6 +198,7 @@ export async function listRecentPapers(options: ListOptions = {}): Promise<Paper
       relevanceTags: papers.relevanceTags,
       primarySource: papers.primarySource,
       rawMetadata: papers.rawMetadata,
+      domain: papers.domain,
       createdAt: papers.createdAt,
       headline: headlineExpr,
       // LEFT JOIN projections: absent rows become false. The boolean cast
@@ -230,6 +245,7 @@ export async function getPaperById(id: string): Promise<PaperWithUserState | nul
       relevanceTags: papers.relevanceTags,
       primarySource: papers.primarySource,
       rawMetadata: papers.rawMetadata,
+      domain: papers.domain,
       createdAt: papers.createdAt,
       headline: sql<string | null>`null::text`,
       isSaved: sql<boolean>`(${userSaves.paperId} is not null)`,
@@ -249,11 +265,10 @@ export async function countPapers(): Promise<number> {
   return row?.count ?? 0
 }
 
-export async function getDistinctYears(): Promise<number[]> {
-  const rows = await db
-    .selectDistinct({ year: papers.year })
-    .from(papers)
-    .where(sql`${papers.year} IS NOT NULL`)
+export async function getDistinctYears(domain?: PaperDomain): Promise<number[]> {
+  const yearCondition = sql`${papers.year} IS NOT NULL`
+  const where = domain ? and(yearCondition, eq(papers.domain, domain)) : yearCondition
+  const rows = await db.selectDistinct({ year: papers.year }).from(papers).where(where)
 
   return rows
     .map((r) => r.year)
@@ -267,11 +282,15 @@ export interface FilterFacets {
   years: number[]
 }
 
-export async function getFilterFacets(): Promise<FilterFacets> {
+// Facets are domain-scoped when `domain` is given (the feed passes the active
+// tab), so the sidebar never offers a source/venue/year that yields zero rows
+// on the current tab. The saved view omits it — it's cross-domain.
+export async function getFilterFacets(domain?: PaperDomain): Promise<FilterFacets> {
+  const domainWhere = domain ? eq(papers.domain, domain) : undefined
   const [sourcesRaw, venueTypesRaw, years] = await Promise.all([
-    db.selectDistinct({ value: papers.primarySource }).from(papers),
-    db.selectDistinct({ value: papers.venueType }).from(papers),
-    getDistinctYears(),
+    db.selectDistinct({ value: papers.primarySource }).from(papers).where(domainWhere),
+    db.selectDistinct({ value: papers.venueType }).from(papers).where(domainWhere),
+    getDistinctYears(domain),
   ])
 
   // Guard against any DB row whose enum value drifted from the canonical
@@ -309,6 +328,8 @@ export async function fetchWeeklyDigestPapers(
       arxivId: papers.arxivId,
       publishedDate: papers.publishedDate,
       createdAt: papers.createdAt,
+      primarySource: papers.primarySource,
+      rawMetadata: papers.rawMetadata,
     })
     .from(papers)
     .where(and(...conditions))

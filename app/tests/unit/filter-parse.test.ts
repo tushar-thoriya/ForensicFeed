@@ -86,6 +86,18 @@ describe('parseFilterParams', () => {
     const result = parseFilterParams(params('venueType=unknown,conference'))
     expect(result.venueTypes).toEqual(['conference'])
   })
+
+  it('parses domain=deepfake', () => {
+    expect(parseFilterParams(params('domain=deepfake')).domain).toBe('deepfake')
+  })
+
+  it('defaults domain to forgery when absent', () => {
+    expect(parseFilterParams(params('')).domain).toBe('forgery')
+  })
+
+  it('defaults domain to forgery for an unknown value', () => {
+    expect(parseFilterParams(params('domain=faces')).domain).toBe('forgery')
+  })
 })
 
 describe('serialiseFilters', () => {
@@ -147,6 +159,16 @@ describe('serialiseFilters', () => {
     const s = serialiseFilters({ ...EMPTY_FILTERS, searchQuery: 'copy move' }).toString()
     expect(s).toBe('q=copy+move')
   })
+
+  it('omits domain when it is the default (forgery)', () => {
+    const s = serialiseFilters({ ...EMPTY_FILTERS, domain: 'forgery' }).toString()
+    expect(s).not.toMatch(/domain/)
+  })
+
+  it('serialises domain=deepfake when non-default', () => {
+    const s = serialiseFilters({ ...EMPTY_FILTERS, domain: 'deepfake' }).toString()
+    expect(s).toBe('domain=deepfake')
+  })
 })
 
 describe('round-trip', () => {
@@ -163,6 +185,8 @@ describe('round-trip', () => {
     { ...EMPTY_FILTERS, sortBy: 'newest' },
     { ...EMPTY_FILTERS, searchQuery: 'forgery' },
     { ...EMPTY_FILTERS, searchQuery: 'copy move detection' },
+    { ...EMPTY_FILTERS, domain: 'deepfake' },
+    { ...EMPTY_FILTERS, domain: 'deepfake', tags: ['deepfake'], searchQuery: 'face swap' },
     {
       sources: ['arxiv', 'cvf'],
       venueTypes: ['conference'],
@@ -171,6 +195,7 @@ describe('round-trip', () => {
       hasCode: true,
       sortBy: 'relevance',
       searchQuery: null,
+      domain: 'forgery',
     },
     {
       sources: ['arxiv'],
@@ -180,6 +205,7 @@ describe('round-trip', () => {
       hasCode: null,
       sortBy: null,
       searchQuery: 'forgery localization',
+      domain: 'deepfake',
     },
   ]
 

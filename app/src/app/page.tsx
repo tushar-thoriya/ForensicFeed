@@ -6,6 +6,7 @@ import { FilterPanel } from '@/components/filters/FilterPanel'
 import { FilterChipsBar } from '@/components/filters/FilterChipsBar'
 import { SearchInput } from '@/components/search/SearchInput'
 import { FeedNav } from '@/components/nav/FeedNav'
+import { DomainTabs } from '@/components/nav/DomainTabs'
 import { parseFilterParams, serialiseFilters } from '@/lib/filters/parse'
 import { isFiltered, type FilterState } from '@/types/filter'
 import '@/components/feed/feed.css'
@@ -48,6 +49,13 @@ function sortLabel(filters: FilterState): string {
   return 'newest first'
 }
 
+const SUBTITLE: Record<FilterState['domain'], string> = {
+  forgery:
+    'Open-access research on image forgery detection and localization — tracked so nothing slips past.',
+  deepfake:
+    'Deepfake, face-swap, and synthetic-face detection research — tracked alongside the forgery feed.',
+}
+
 export default async function FeedPage({ searchParams }: FeedPageProps) {
   const resolved = await searchParams
   const filters: FilterState = parseFilterParams(paramsToURLSearchParams(resolved))
@@ -61,7 +69,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
   try {
     ;[papers, facets] = await Promise.all([
       listRecentPapers({ filters, limit: 50, minRelevance: 0.2 }),
-      getFilterFacets(),
+      getFilterFacets(filters.domain),
     ])
   } catch (error) {
     // Log full error context server-side; never reflect raw DB / connection
@@ -103,10 +111,8 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
           <FeedNav current="feed" />
           <p className="feed-eyebrow">the feed</p>
           <h1 className="feed-title">ForensicFeed</h1>
-          <p className="feed-subtitle">
-            Open-access research on image forgery detection and localization — tracked so nothing
-            slips past.
-          </p>
+          <p className="feed-subtitle">{SUBTITLE[filters.domain]}</p>
+          <DomainTabs filters={filters} />
           <SearchInput initialValue={filters.searchQuery ?? ''} resultStatusId={RESULT_STATUS_ID} />
           <p id={RESULT_STATUS_ID} className="feed-meta">
             <span aria-live="polite" role="status">

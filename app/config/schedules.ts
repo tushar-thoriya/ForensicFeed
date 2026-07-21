@@ -63,6 +63,11 @@ export const SCHEDULES = {
   // OpenReview (ICLR/NeurIPS) — conference cycle, weekly is plenty
   openReview: PRESETS.WEEKLY_MONDAY_7_30AM,
 
+  // greatzh/papers — hand-curated GitHub list, updated on the author's own
+  // cadence rather than a publication schedule; weekly sweep is enough since
+  // the DB upsert makes re-fetching the same entries a no-op.
+  greatzh: PRESETS.WEEKLY_MONDAY_6AM,
+
   // Weekly email digest (B2) — Monday morning, after the weekend's papers land
   digest: PRESETS.WEEKLY_MONDAY_8AM,
 } as const

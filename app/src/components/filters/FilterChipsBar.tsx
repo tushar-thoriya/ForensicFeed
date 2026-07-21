@@ -50,6 +50,10 @@ export function FilterChipsBar({ filters }: FilterChipsBarProps) {
   )
 
   return (
-    <FilterChips filters={filters} onRemove={onRemove} onClearAll={() => navigate(EMPTY_FILTERS)} />
+    <FilterChips
+      filters={filters}
+      onRemove={onRemove}
+      onClearAll={() => navigate({ ...EMPTY_FILTERS, domain: filters.domain })}
+    />
   )
 }

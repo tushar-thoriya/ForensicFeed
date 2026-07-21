@@ -1,4 +1,4 @@
-import { and, desc, gte, sql, type SQL } from 'drizzle-orm'
+import { and, desc, eq, gte, sql, type SQL } from 'drizzle-orm'
 import { PgDialect } from 'drizzle-orm/pg-core'
 import { papers, type Paper } from '@/lib/db/schema'
 
@@ -28,6 +28,7 @@ export interface CompiledDigestQuery {
 // The digest email needs only content fields — no user state (saved/read) and
 // no search highlight. `arxivId`/`pdfUrl` drive the "read on arXiv" link;
 // `id` drives the in-app detail link built in the template phase.
+// `primarySource`/`rawMetadata` drive the greatzh/papers source badge.
 export type DigestPaper = Pick<
   Paper,
   | 'id'
@@ -41,6 +42,8 @@ export type DigestPaper = Pick<
   | 'arxivId'
   | 'publishedDate'
   | 'createdAt'
+  | 'primarySource'
+  | 'rawMetadata'
 >
 
 export function clampDigestLimit(value: number | undefined): number {
@@ -52,7 +55,13 @@ export function buildDigestConditions(input: BuildDigestQueryInput): SQL[] {
   const threshold = input.threshold ?? DIGEST_RELEVANCE_THRESHOLD
   // Window keys off created_at (ingestion time), NOT published_date — a paper
   // published months ago but discovered this week must still appear.
-  return [gte(papers.relevanceScore, threshold), gte(papers.createdAt, input.since)]
+  // The digest is forgery-only by product decision (C1-PLAN): deepfake papers
+  // are browse-only in the app and never emailed.
+  return [
+    gte(papers.relevanceScore, threshold),
+    gte(papers.createdAt, input.since),
+    eq(papers.domain, 'forgery'),
+  ]
 }
 
 // Best + freshest first. published_date here is a tie-breaker in ORDER BY only;
