@@ -2,6 +2,7 @@ import { TAG_ORDER, type Tag } from '@/lib/ingestion/tagger'
 import { SOURCE_VALUES, VENUE_TYPE_VALUES } from '@/lib/filters/labels'
 import { parseSearchQuery } from '@/lib/search/parse-query'
 import { type FilterState, type SortBy } from '@/types/filter'
+import type { PaperDomain } from '@/types/paper'
 
 const EXPLICIT_SORT_VALUES = ['newest', 'relevance'] as const
 
@@ -33,6 +34,12 @@ function parseHasCode(value: string | null): boolean | null {
   return null
 }
 
+// 'forgery' is the default view, so anything other than an explicit
+// 'deepfake' (absent, unknown, or 'forgery' itself) resolves to 'forgery'.
+function parseDomain(value: string | null): PaperDomain {
+  return value === 'deepfake' ? 'deepfake' : 'forgery'
+}
+
 // Tri-state: absent param OR unrecognised value → null (no explicit choice);
 // explicit 'newest' or 'relevance' parses to that string. The distinction
 // matters because when searching with sortBy=null we default to ts_rank_cd;
@@ -53,6 +60,7 @@ export function parseFilterParams(params: URLSearchParams): FilterState {
     hasCode: parseHasCode(params.get('hasCode')),
     sortBy: parseSort(params.get('sort')),
     searchQuery: parseSearchQuery(params.get('q')),
+    domain: parseDomain(params.get('domain')),
   }
 }
 
@@ -70,5 +78,8 @@ export function serialiseFilters(state: FilterState): URLSearchParams {
   // q values into the URL even if the caller passed one accidentally.
   const normalised = parseSearchQuery(state.searchQuery)
   if (normalised !== null) out.set('q', normalised)
+  // domain: only the non-default 'deepfake' writes a param; 'forgery' omits it
+  // so the default feed URL stays clean and round-trips (like sortBy=null).
+  if (state.domain !== 'forgery') out.set('domain', state.domain)
   return out
 }

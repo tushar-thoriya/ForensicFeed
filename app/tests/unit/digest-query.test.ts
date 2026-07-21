@@ -46,6 +46,12 @@ describe('buildDigestQuery — WHERE clause', () => {
     expect(whereClause(sql)).toMatch(/created_at/)
     expect(whereClause(sql)).not.toMatch(/published_date/)
   })
+
+  it('constrains the digest to the forgery domain only', () => {
+    const { sql, params } = buildDigestQuery({ since: SINCE })
+    expect(whereClause(sql)).toMatch(/"domain"/)
+    expect(params).toContain('forgery')
+  })
 })
 
 describe('buildDigestQuery — ORDER BY', () => {

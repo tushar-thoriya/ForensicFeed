@@ -18,7 +18,7 @@ interface TriggerResponse {
 
 // Constant-time-ish comparison so a timing oracle can't infer the secret one
 // byte at a time. Lengths differ → unequal; lengths match → XOR every byte.
-function safeEqual(a: string, b: string): boolean {
+export function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false
   let diff = 0
   for (let i = 0; i < a.length; i++) {

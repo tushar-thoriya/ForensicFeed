@@ -178,7 +178,11 @@ export function FilterSidebar({
         </div>
       </fieldset>
 
-      <button type="button" className="filter-clear-button" onClick={() => onChange(EMPTY_FILTERS)}>
+      <button
+        type="button"
+        className="filter-clear-button"
+        onClick={() => onChange({ ...EMPTY_FILTERS, domain: filters.domain })}
+      >
         Clear all filters
       </button>
     </aside>

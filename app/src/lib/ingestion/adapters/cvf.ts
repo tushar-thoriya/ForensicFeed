@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio'
 import type { Adapter, AdapterFetchOptions } from '@/lib/ingestion/types'
 import type { NormalisedPaper } from '@/types/paper'
 import { extractCodeUrl } from '@/lib/ingestion/code-url'
+import { extractArxivIdFromUrl } from '@/lib/ingestion/arxiv-id'
 import { sanitiseExternalUrl } from '@/lib/security/url'
 
 const CVF_BASE = 'https://openaccess.thecvf.com'
@@ -55,11 +56,6 @@ function titleMatchesForgery(title: string): boolean {
 function resolveAbsolute(href: string): string {
   if (href.startsWith('http://') || href.startsWith('https://')) return href
   return `${CVF_BASE}${href.startsWith('/') ? href : `/${href}`}`
-}
-
-function extractArxivIdFromUrl(url: string): string | null {
-  const m = url.match(/arxiv\.org\/(?:abs|pdf)\/(\d{4}\.\d{4,5})/i)
-  return m ? m[1]! : null
 }
 
 export function parseCvfHtml(html: string, venueCode: string): NormalisedPaper[] {

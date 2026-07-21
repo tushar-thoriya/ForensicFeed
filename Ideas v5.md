@@ -19,11 +19,4 @@ these is just for your information. you don't need to bias towards this type of 
 
 
 
-
-
-
 so we must added image foregery and localization github repo so we can get paper update from industries top AI researcher instated of reling only on abstruct summery of arxive papers.
-
-
-
-

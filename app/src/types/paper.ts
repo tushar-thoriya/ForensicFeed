@@ -5,6 +5,13 @@ export type PaperSource =
   | 'cvf'
   | 'openreview'
   | 'huggingface'
+  | 'greatzh'
+
+// 'forgery' is the user's default research focus (document/image forgery
+// detection & localization); 'deepfake' covers face-swap/face-forgery/
+// synthetic-face detection. Every paper belongs to exactly one domain — see
+// classifyDomain in lib/ingestion/domain.ts for how it's assigned.
+export type PaperDomain = 'forgery' | 'deepfake'
 
 export type VenueType = 'arxiv' | 'conference' | 'journal' | 'workshop' | 'preprint'
 
@@ -49,4 +56,10 @@ export interface NormalisedPaper {
 
   primarySource: PaperSource
   rawMetadata: Record<string, unknown>
+
+  // Curator-provided domain signal (currently only greatzh, derived from its
+  // section heading). classifyDomain treats this as a strong prior but a
+  // forgery-core keyword hit in title/abstract still overrides it — see
+  // lib/ingestion/domain.ts.
+  domainHint?: PaperDomain
 }

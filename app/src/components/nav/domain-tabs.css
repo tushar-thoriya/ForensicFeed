@@ -1,0 +1,40 @@
+.domain-tabs {
+  display: flex;
+  gap: var(--space-lg, 1.5rem);
+  margin: var(--space-md, 1rem) 0 var(--space-lg, 1.5rem);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.domain-tab {
+  display: inline-flex;
+  align-items: center;
+
+  /* Padding-based 44px touch target without animating layout metrics. */
+  min-height: 44px;
+  padding: 0 var(--space-xs, 0.25rem) var(--space-sm, 0.5rem);
+  color: var(--color-text-muted, oklch(55% 0 0deg));
+  font-family: var(--font-sans);
+  font-size: var(--text-base, 1rem);
+  font-weight: 500;
+  text-decoration: none;
+
+  /* Transparent 2px keeps the tab from shifting when it becomes active. */
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--duration-fast, 150ms) var(--ease-out-expo, ease);
+}
+
+.domain-tab:hover {
+  color: var(--color-text-primary, oklch(18% 0 0deg));
+}
+
+.domain-tab-active {
+  color: var(--color-text-primary, oklch(18% 0 0deg));
+  border-bottom-color: var(--color-accent, oklch(55% 0.18 250deg));
+}
+
+.domain-tab:focus-visible {
+  outline: 2px solid var(--color-accent, oklch(55% 0.18 250deg));
+  outline-offset: 3px;
+  border-radius: 2px;
+}

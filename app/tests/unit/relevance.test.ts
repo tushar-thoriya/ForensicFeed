@@ -116,6 +116,24 @@ describe('scoreRelevance', () => {
     const b = scoreRelevance(input)
     expect(a.score).toBe(b.score)
   })
+
+  it('scores a non-"detection" face-forgery title at or above the feed floor', () => {
+    // Deepfake papers must be able to clear the 0.2 feed threshold on their own
+    // merit even when the title lacks the word "detection".
+    const r = scoreRelevance({
+      title: 'Robust Face Forgery Identification in the Wild',
+      abstract: null,
+    })
+    expect(r.score).toBeGreaterThanOrEqual(0.2)
+  })
+
+  it('leaves a plain document-forgery title score unchanged by the face keywords', () => {
+    const r = scoreRelevance({
+      title: 'Forgery Detection on Scanned Invoices',
+      abstract: 'Nothing else of interest here.',
+    })
+    expect(r.score).toBeCloseTo(0.4, 5)
+  })
 })
 
 describe('assignTags', () => {

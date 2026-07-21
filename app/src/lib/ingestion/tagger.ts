@@ -30,6 +30,13 @@ const MEDIUM_KEYWORDS = [
   'image integrity',
   'deepfake detection',
   'face swap detection',
+  // Broader face-manipulation phrasings so deepfake-domain papers whose titles
+  // omit the word "detection" can still clear the 0.2 feed floor. Kept
+  // alongside the narrower '…detection' phrases above; the summing scorer then
+  // rewards a "face swap detection" title with both hits, which is intended.
+  'face forgery',
+  'face swap',
+  'face reenactment',
   'gan detection',
   'ai-generated image',
   'pixel-level segmentation',

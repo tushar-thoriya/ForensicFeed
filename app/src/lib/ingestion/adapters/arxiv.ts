@@ -18,6 +18,12 @@ const FORGERY_TERMS = [
   'copy-move',
   'copy move',
   'inpainting detection',
+  // Deepfake-domain terms. 'forgery' and 'manipulation' above already match
+  // "face forgery"/"face manipulation" at arXiv's word level, so only the
+  // face-swap/reenactment phrasings need explicit terms here.
+  'face swap',
+  'faceswap',
+  'face reenactment',
 ] as const
 
 function buildSearchQuery(): string {

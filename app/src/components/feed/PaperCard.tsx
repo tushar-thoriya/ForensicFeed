@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { PaperWithUserState } from '@/types/paper'
 import { renderHighlight } from '@/lib/search/render-highlight'
+import { getSourceBadge } from '@/lib/ingestion/source-link'
 import { SaveButton } from '@/components/paper-actions/SaveButton'
 import { ReadToggle } from '@/components/paper-actions/ReadToggle'
 
@@ -53,6 +54,7 @@ function pdfHref(paper: PaperWithUserState): string | null {
 export function PaperCard({ paper }: PaperCardProps) {
   const detailHref = `/papers/${encodeURIComponent(paper.id)}`
   const externalHref = pdfHref(paper)
+  const sourceBadge = getSourceBadge(paper.primarySource, paper.rawMetadata)
   const titleId = `paper-${paper.id}-title`
   const citationCount =
     typeof paper.citationCount === 'number' && paper.citationCount > 0 ? paper.citationCount : null
@@ -111,6 +113,17 @@ export function PaperCard({ paper }: PaperCardProps) {
           >
             <span aria-hidden="true">{'</>'}</span>
             <span>code</span>
+            <span className="sr-only"> (opens in new tab)</span>
+          </a>
+        ) : null}
+        {sourceBadge ? (
+          <a
+            className="tag-badge tag-badge-source"
+            href={sourceBadge.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>{sourceBadge.label}</span>
             <span className="sr-only"> (opens in new tab)</span>
           </a>
         ) : null}

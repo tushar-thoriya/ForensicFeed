@@ -25,6 +25,8 @@ function paper(overrides: Partial<DigestPaper> = {}): DigestPaper {
     arxivId: '2406.00001',
     publishedDate: new Date('2026-06-05T00:00:00Z'),
     createdAt: new Date('2026-06-06T00:00:00Z'),
+    primarySource: 'arxiv',
+    rawMetadata: {},
     ...overrides,
   }
 }
@@ -102,6 +104,45 @@ describe('renderDigestEmail — content', () => {
   it('truncates author lists beyond three with "et al."', () => {
     const { html } = render([paper({ authors: ['A', 'B', 'C', 'D', 'E'] })])
     expect(html).toMatch(/A, B, C\s*et al\./)
+  })
+})
+
+describe('renderDigestEmail — greatzh source badge', () => {
+  it('links back to the greatzh/papers GitHub repo for greatzh-sourced papers', () => {
+    const { html } = render([
+      paper({
+        primarySource: 'greatzh',
+        rawMetadata: { section: 'Image Splicing' },
+      }),
+    ])
+    expect(html).toContain('greatzh/papers')
+    expect(html).toContain('https://github.com/greatzh/papers#image-splicing')
+  })
+
+  it('renders the badge in the compact (overflow) list too', () => {
+    const papers = Array.from({ length: DIGEST_FULL_CARDS + 1 }, (_, i) =>
+      paper({
+        id: `p${i}`,
+        title: `Paper Number ${i}`,
+        primarySource: i === DIGEST_FULL_CARDS ? 'greatzh' : 'arxiv',
+        rawMetadata: i === DIGEST_FULL_CARDS ? { section: 'AIGC' } : {},
+      }),
+    )
+    const { html } = render(papers)
+    expect(html).toContain('https://github.com/greatzh/papers#aigc')
+  })
+
+  it('includes the source link in the plain-text version', () => {
+    const { text } = render([
+      paper({ primarySource: 'greatzh', rawMetadata: { section: 'Copy Move' } }),
+    ])
+    expect(text).toContain('https://github.com/greatzh/papers#copy-move')
+  })
+
+  it('omits the badge entirely for non-greatzh sources', () => {
+    const { html, text } = render([paper({ primarySource: 'arxiv', rawMetadata: {} })])
+    expect(html).not.toContain('greatzh/papers')
+    expect(text).not.toContain('greatzh/papers')
   })
 })
 

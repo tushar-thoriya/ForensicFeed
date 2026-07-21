@@ -1,4 +1,4 @@
-import { and, desc, gte, inArray, isNotNull, isNull, sql, type SQL } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray, isNotNull, isNull, sql, type SQL } from 'drizzle-orm'
 import { PgDialect } from 'drizzle-orm/pg-core'
 import { papers } from '@/lib/db/schema'
 import type { FilterState } from '@/types/filter'
@@ -13,6 +13,10 @@ export interface BuildListPapersInput {
   minRelevance: number
   since?: Date
   limit?: number
+  // When true, the feed-tab domain constraint is skipped entirely — used by
+  // the saved view, which is a personal cross-domain library that shows saves
+  // from both tabs regardless of the (irrelevant there) domain in filters.
+  ignoreDomain?: boolean
 }
 
 export interface CompiledQuery {
@@ -50,9 +54,10 @@ function tsRankExpr(query: string): SQL {
 }
 
 export function buildConditions(input: BuildListPapersInput): SQL[] {
-  const { filters, minRelevance, since } = input
+  const { filters, minRelevance, since, ignoreDomain } = input
   const conditions: SQL[] = [gte(papers.relevanceScore, minRelevance)]
 
+  if (!ignoreDomain) conditions.push(eq(papers.domain, filters.domain))
   if (since) conditions.push(gte(papers.publishedDate, since))
   if (filters.sources.length > 0) conditions.push(inArray(papers.primarySource, filters.sources))
   if (filters.venueTypes.length > 0) conditions.push(inArray(papers.venueType, filters.venueTypes))

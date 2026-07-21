@@ -1,4 +1,5 @@
 import type { DigestPaper } from '@/lib/db/queries/digest-query'
+import { getSourceBadge, type SourceBadge } from '@/lib/ingestion/source-link'
 
 // How many papers render as full cards before the rest collapse into a compact
 // list. Keeps the email short while still surfacing every relevant paper.
@@ -95,6 +96,16 @@ function externalLinkHtml(p: DigestPaper): string {
   return `<a href="${escapeHtml(url)}" style="color:${C.accent};text-decoration:none;font:500 13px/1.4 ${SANS};">${label} →</a>`
 }
 
+function sourceBadge(p: DigestPaper): SourceBadge | null {
+  return getSourceBadge(p.primarySource, p.rawMetadata)
+}
+
+function sourceBadgeHtml(p: DigestPaper): string {
+  const badge = sourceBadge(p)
+  if (!badge) return ''
+  return `<a href="${escapeHtml(badge.url)}" style="display:inline-block;margin:0 6px 0 0;padding:2px 8px;background:${C.tagBg};color:${C.accentStrong};border-radius:4px;text-decoration:none;font:500 12px/1.4 ${MONO};">via ${escapeHtml(badge.label)}</a>`
+}
+
 function cardHtml(p: DigestPaper, appUrl: string): string {
   const authors = formatAuthors(p.authors)
   const authorsLine = authors
@@ -110,15 +121,19 @@ function cardHtml(p: DigestPaper, appUrl: string): string {
     </a>
     ${authorsLine}
     ${tagsHtml(p.relevanceTags)}
-    <div style="margin-top:10px;">${externalLinkHtml(p)}</div>
+    <div style="margin-top:10px;">${externalLinkHtml(p)}${sourceBadgeHtml(p) ? `<span style="display:inline-block;width:10px;"></span>${sourceBadgeHtml(p)}` : ''}</div>
   </div>`
 }
 
 function compactItemHtml(p: DigestPaper, appUrl: string): string {
+  const badge = sourceBadge(p)
+  const badgeHtml = badge
+    ? ` <a href="${escapeHtml(badge.url)}" style="color:${C.accentStrong};text-decoration:none;font:500 12px/1.4 ${MONO};">via ${escapeHtml(badge.label)}</a>`
+    : ''
   return `
   <li style="margin:0 0 10px;font:14px/1.5 ${SANS};color:${C.secondary};">
     <a href="${escapeHtml(paperUrl(appUrl, p.id))}" style="color:${C.text};text-decoration:none;font-weight:600;">${escapeHtml(p.title)}</a>
-    <span style="color:${C.muted};font:12px/1.4 ${MONO};"> — ${escapeHtml(venueLabel(p))} · ${formatScore(p.relevanceScore)}</span>
+    <span style="color:${C.muted};font:12px/1.4 ${MONO};"> — ${escapeHtml(venueLabel(p))} · ${formatScore(p.relevanceScore)}</span>${badgeHtml}
   </li>`
 }
 
@@ -158,12 +173,14 @@ function renderQuiet(input: RenderDigestInput): RenderedEmail {
 function paperText(p: DigestPaper, appUrl: string): string {
   const authors = formatAuthors(p.authors)
   const ext = externalUrl(p)
+  const badge = sourceBadge(p)
   const lines = [
     `- ${p.title}`,
     authors ? `  ${authors}` : '',
     `  ${venueLabel(p)} · score ${formatScore(p.relevanceScore)}`,
     `  ${paperUrl(appUrl, p.id)}`,
     ext ? `  ${ext}` : '',
+    badge ? `  via ${badge.label}: ${badge.url}` : '',
   ]
   return lines.filter(Boolean).join('\n')
 }

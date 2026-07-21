@@ -1,5 +1,5 @@
 import type { Tag } from '@/lib/ingestion/tagger'
-import type { PaperSource, VenueType } from './paper'
+import type { PaperDomain, PaperSource, VenueType } from './paper'
 
 // Tri-state: null means "no explicit sort param in URL". Required so we can
 // default to ts_rank_cd when searching without overriding a user who clicked
@@ -24,6 +24,11 @@ export interface FilterState {
   hasCode: boolean | null
   sortBy: SortBy
   searchQuery: string | null
+  // The active feed tab. Non-nullable and always meaningful: 'forgery' is the
+  // default view. Deliberately NOT part of isFiltered (a tab is a view, not a
+  // filter) and NOT chip-removable — it behaves like sortBy, persisted in the
+  // URL only when non-default.
+  domain: PaperDomain
 }
 
 export const EMPTY_FILTERS: FilterState = {
@@ -34,12 +39,14 @@ export const EMPTY_FILTERS: FilterState = {
   hasCode: null,
   sortBy: null,
   searchQuery: null,
+  domain: 'forgery',
 }
 
 // A non-default sort order or a search query counts as "filtered" so a
 // zero-result view triggers the "no matches" (or "no search matches")
 // empty state with a clear CTA, rather than the "no papers ingested yet"
-// copy.
+// copy. `domain` is intentionally excluded — switching tabs is not filtering,
+// and an empty deepfake tab should still read as "no papers", not "no matches".
 export function isFiltered(state: FilterState): boolean {
   return (
     state.sources.length > 0 ||
