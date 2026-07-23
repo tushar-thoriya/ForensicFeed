@@ -21,7 +21,6 @@ export const venueType = pgEnum('venue_type', [
 
 export const paperSource = pgEnum('paper_source', [
   'arxiv',
-  'paperswithcode',
   'semantic_scholar',
   'cvf',
   'openreview',

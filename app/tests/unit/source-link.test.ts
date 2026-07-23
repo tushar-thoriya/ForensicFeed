@@ -9,7 +9,6 @@ describe('getSourceBadge', () => {
     expect(getSourceBadge('openreview', {})).toBeNull()
     expect(getSourceBadge('huggingface', {})).toBeNull()
     expect(getSourceBadge('semantic_scholar', {})).toBeNull()
-    expect(getSourceBadge('paperswithcode', {})).toBeNull()
   })
 
   it('links to the repo root when rawMetadata has no section', () => {
