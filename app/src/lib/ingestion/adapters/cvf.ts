@@ -131,6 +131,19 @@ export function parseCvfHtml(html: string, venueCode: string): NormalisedPaper[]
   return papers
 }
 
+// Walk an error's `cause` chain so a bare undici "fetch failed" reveals its real
+// underlying reason (e.g. UND_ERR_CONNECT_TIMEOUT, ECONNRESET, UND_ERR_BODY_TIMEOUT).
+function describeError(error: unknown): string {
+  const parts: string[] = []
+  let cur: unknown = error
+  for (let depth = 0; cur instanceof Error && depth < 4; depth += 1) {
+    const code = (cur as { code?: string }).code
+    parts.push(code ? `${cur.name}[${code}]: ${cur.message}` : `${cur.name}: ${cur.message}`)
+    cur = (cur as { cause?: unknown }).cause
+  }
+  return parts.length > 0 ? parts.join(' <- ') : String(error)
+}
+
 async function fetchVenue(venueCode: string): Promise<NormalisedPaper[]> {
   const url = `${CVF_BASE}/${venueCode}?day=all`
   const controller = new AbortController()
@@ -155,6 +168,11 @@ async function fetchVenue(venueCode: string): Promise<NormalisedPaper[]> {
   } catch (error: unknown) {
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error(`CVF ${venueCode} timed out after ${CVF_FETCH_TIMEOUT_MS}ms`)
+    }
+    // Network-level failures ("fetch failed") hide the real reason in `.cause`;
+    // surface it. HTTP-status errors thrown above are already descriptive — pass through.
+    if (error instanceof Error && error.cause) {
+      throw new Error(`CVF ${venueCode} fetch error: ${describeError(error)}`)
     }
     throw error
   } finally {
