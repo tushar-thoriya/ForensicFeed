@@ -132,7 +132,7 @@ describe('parseGreatzhReadme', () => {
     const markdown = await loadFixture()
     const papers = parseGreatzhReadme(markdown)
     for (const paper of papers) {
-      expect(paper.primarySource).toBe('greatzh')
+      expect(paper.primarySource).toBe('greatzh_repo')
       expect(paper.authors).toEqual([])
       expect(paper.abstract).toBeNull()
       expect(paper.doi).toBeNull()

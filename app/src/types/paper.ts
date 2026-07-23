@@ -4,7 +4,7 @@ export type PaperSource =
   | 'cvf'
   | 'openreview'
   | 'huggingface'
-  | 'greatzh'
+  | 'greatzh_repo'
 
 // 'forgery' is the user's default research focus (document/image forgery
 // detection & localization); 'deepfake' covers face-swap/face-forgery/

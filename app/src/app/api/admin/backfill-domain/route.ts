@@ -26,7 +26,7 @@ function hintFor(row: {
   primarySource: string
   rawMetadata: Record<string, unknown>
 }): PaperDomain | undefined {
-  if (row.primarySource !== 'greatzh') return undefined
+  if (row.primarySource !== 'greatzh_repo') return undefined
   const section = row.rawMetadata.section
   if (typeof section !== 'string') return undefined
   return SECTION_DOMAIN.get(section.toLowerCase())

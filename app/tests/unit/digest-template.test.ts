@@ -111,7 +111,7 @@ describe('renderDigestEmail — greatzh source badge', () => {
   it('links back to the greatzh/papers GitHub repo for greatzh-sourced papers', () => {
     const { html } = render([
       paper({
-        primarySource: 'greatzh',
+        primarySource: 'greatzh_repo',
         rawMetadata: { section: 'Image Splicing' },
       }),
     ])
@@ -124,7 +124,7 @@ describe('renderDigestEmail — greatzh source badge', () => {
       paper({
         id: `p${i}`,
         title: `Paper Number ${i}`,
-        primarySource: i === DIGEST_FULL_CARDS ? 'greatzh' : 'arxiv',
+        primarySource: i === DIGEST_FULL_CARDS ? 'greatzh_repo' : 'arxiv',
         rawMetadata: i === DIGEST_FULL_CARDS ? { section: 'AIGC' } : {},
       }),
     )
@@ -134,7 +134,7 @@ describe('renderDigestEmail — greatzh source badge', () => {
 
   it('includes the source link in the plain-text version', () => {
     const { text } = render([
-      paper({ primarySource: 'greatzh', rawMetadata: { section: 'Copy Move' } }),
+      paper({ primarySource: 'greatzh_repo', rawMetadata: { section: 'Copy Move' } }),
     ])
     expect(text).toContain('https://github.com/greatzh/papers#copy-move')
   })
