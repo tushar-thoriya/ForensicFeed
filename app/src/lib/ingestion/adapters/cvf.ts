@@ -139,7 +139,9 @@ async function fetchVenue(venueCode: string): Promise<NormalisedPaper[]> {
   try {
     const response = await fetch(url, {
       headers: {
-        Accept: 'text/html',
+        // thecvf.com returns 406 Not Acceptable for a bare `text/html`; it needs
+        // a browser-style Accept with a */* fallback to serve the page.
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'User-Agent':
           'forensicfeed-research-tracker (+https://github.com/tushar-thoriya/ForensicFeed)',
       },
