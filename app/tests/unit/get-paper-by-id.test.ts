@@ -22,9 +22,9 @@ vi.mock('@/lib/db/client', () => {
   }
   builder.limit = async () => captured.selectRows
   return {
-    db: {
+    getDb: () => ({
       select: () => builder,
-    },
+    }),
     schema: {},
   }
 })

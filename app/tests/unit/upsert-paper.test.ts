@@ -28,11 +28,11 @@ vi.mock('@/lib/db/client', () => {
     }),
   }
   return {
-    db: {
+    getDb: () => ({
       select: () => selectBuilder,
       insert: () => insertBuilder,
       update: () => updateBuilder,
-    },
+    }),
     schema: {},
   }
 })

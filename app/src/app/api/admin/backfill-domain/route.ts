@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { asc, eq, gt } from 'drizzle-orm'
-import { db } from '@/lib/db/client'
+import { getDb } from '@/lib/db/client'
 import { papers } from '@/lib/db/schema'
 import { getEnv } from '@/lib/env'
 import { safeEqual } from '@/lib/inngest/manual-trigger'
@@ -46,6 +46,7 @@ export async function POST(request: Request): Promise<NextResponse<BackfillRespo
   }
 
   try {
+    const db = getDb()
     let cursor = ''
     let scanned = 0
     let updated = 0

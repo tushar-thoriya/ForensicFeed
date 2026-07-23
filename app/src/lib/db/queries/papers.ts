@@ -1,5 +1,5 @@
 import { and, eq, sql, type SQL } from 'drizzle-orm'
-import { db } from '@/lib/db/client'
+import { getDb } from '@/lib/db/client'
 import { papers, readStatus, userSaves, type NewPaper } from '@/lib/db/schema'
 import type {
   NormalisedPaper,
@@ -43,6 +43,7 @@ async function findExistingPaper(input: {
   if (input.doi) lookups.push(eq(papers.doi, input.doi))
   lookups.push(eq(papers.titleHash, input.titleHash))
 
+  const db = getDb()
   for (const condition of lookups) {
     const [row] = await db.select({ id: papers.id }).from(papers).where(condition).limit(1)
     if (row) return row
@@ -70,6 +71,7 @@ export async function upsertPaper(input: NormalisedPaper): Promise<UpsertResult>
   const relevanceTags = assignTags(relevanceInput)
   const domain = classifyDomain(relevanceInput, input.domainHint)
 
+  const db = getDb()
   const existing = await findExistingPaper({
     arxivId: input.arxivId,
     doi: input.doi,
@@ -177,6 +179,7 @@ export async function listRecentPapers(options: ListOptions = {}): Promise<Paper
         >`ts_headline('english', coalesce(${papers.title}, '') || ' ' || coalesce(${papers.abstract}, ''), websearch_to_tsquery('english', ${filters.searchQuery}), 'StartSel=\x02,StopSel=\x03,MaxWords=35,MinWords=15,MaxFragments=1')`
       : sql<string | null>`null::text`
 
+  const db = getDb()
   const rows = await db
     .select({
       id: papers.id,
@@ -224,6 +227,7 @@ export async function listRecentPapers(options: ListOptions = {}): Promise<Paper
 // on detail). Returns null when no row matches; the route maps that to
 // notFound() so /papers/badid surfaces a real 404.
 export async function getPaperById(id: string): Promise<PaperWithUserState | null> {
+  const db = getDb()
   const [row] = await db
     .select({
       id: papers.id,
@@ -261,6 +265,7 @@ export async function getPaperById(id: string): Promise<PaperWithUserState | nul
 }
 
 export async function countPapers(): Promise<number> {
+  const db = getDb()
   const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(papers)
   return row?.count ?? 0
 }
@@ -268,6 +273,7 @@ export async function countPapers(): Promise<number> {
 export async function getDistinctYears(domain?: PaperDomain): Promise<number[]> {
   const yearCondition = sql`${papers.year} IS NOT NULL`
   const where = domain ? and(yearCondition, eq(papers.domain, domain)) : yearCondition
+  const db = getDb()
   const rows = await db.selectDistinct({ year: papers.year }).from(papers).where(where)
 
   return rows
@@ -287,6 +293,7 @@ export interface FilterFacets {
 // on the current tab. The saved view omits it — it's cross-domain.
 export async function getFilterFacets(domain?: PaperDomain): Promise<FilterFacets> {
   const domainWhere = domain ? eq(papers.domain, domain) : undefined
+  const db = getDb()
   const [sourcesRaw, venueTypesRaw, years] = await Promise.all([
     db.selectDistinct({ value: papers.primarySource }).from(papers).where(domainWhere),
     db.selectDistinct({ value: papers.venueType }).from(papers).where(domainWhere),
@@ -315,6 +322,7 @@ export async function fetchWeeklyDigestPapers(
   const conditions = buildDigestConditions(input)
   const limit = clampDigestLimit(input.limit)
 
+  const db = getDb()
   const rows = await db
     .select({
       id: papers.id,
