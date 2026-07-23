@@ -1,6 +1,5 @@
 export type PaperSource =
   | 'arxiv'
-  | 'paperswithcode'
   | 'semantic_scholar'
   | 'cvf'
   | 'openreview'

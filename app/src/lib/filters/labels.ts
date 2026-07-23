@@ -3,7 +3,6 @@ import type { PaperSource, VenueType } from '@/types/paper'
 
 export const SOURCE_LABEL: Record<PaperSource, string> = {
   arxiv: 'arXiv',
-  paperswithcode: 'PapersWithCode',
   semantic_scholar: 'Semantic Scholar',
   cvf: 'CVF',
   openreview: 'OpenReview',
@@ -36,7 +35,6 @@ export const TAG_LABEL: Record<Tag, string> = {
 
 export const SOURCE_VALUES: ReadonlyArray<PaperSource> = [
   'arxiv',
-  'paperswithcode',
   'semantic_scholar',
   'cvf',
   'openreview',
