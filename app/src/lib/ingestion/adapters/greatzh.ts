@@ -189,7 +189,7 @@ export function parseGreatzhReadme(markdown: string): NormalisedPaper[] {
       pdfUrl: sanitiseExternalUrl(`https://arxiv.org/pdf/${arxivId}`),
       codeUrl: sanitiseExternalUrl(extractCodeUrl(entry)),
       citationCount: null,
-      primarySource: 'greatzh',
+      primarySource: 'greatzh_repo',
       rawMetadata: { section: currentHeading },
       domainHint: currentDomain,
     })
@@ -199,7 +199,7 @@ export function parseGreatzhReadme(markdown: string): NormalisedPaper[] {
 }
 
 export const greatzhAdapter: Adapter = {
-  source: 'greatzh',
+  source: 'greatzh_repo',
   // `since` is intentionally unused: publishedDate is month-granularity
   // (derived from the arXiv id, see dateFromArxivId) and pinned to day 1, so
   // a rolling `since` cutoff would permanently exclude a paper the curator

@@ -25,7 +25,7 @@ export const paperSource = pgEnum('paper_source', [
   'cvf',
   'openreview',
   'huggingface',
-  'greatzh',
+  'greatzh_repo',
 ])
 
 export const readStatusValue = pgEnum('read_status_value', [

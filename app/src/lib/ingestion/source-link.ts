@@ -28,7 +28,7 @@ export function getSourceBadge(
   primarySource: PaperSource,
   rawMetadata: Record<string, unknown>,
 ): SourceBadge | null {
-  if (primarySource !== 'greatzh') return null
+  if (primarySource !== 'greatzh_repo') return null
   const section = typeof rawMetadata.section === 'string' ? rawMetadata.section : null
   const url = section ? `${GREATZH_REPO_URL}#${githubHeadingSlug(section)}` : GREATZH_REPO_URL
   return { label: 'greatzh/papers', url }
