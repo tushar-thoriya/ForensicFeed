@@ -1,5 +1,5 @@
 import { and, desc, eq, sql } from 'drizzle-orm'
-import { db } from '@/lib/db/client'
+import { getDb } from '@/lib/db/client'
 import { papers, readStatus, userSaves } from '@/lib/db/schema'
 import type { PaperWithUserState } from '@/types/paper'
 import { EMPTY_FILTERS, type FilterState } from '@/types/filter'
@@ -50,6 +50,7 @@ export async function listSavedPapers(
       ? [desc(userSaves.savedAt)]
       : buildOrderBy(filters)
 
+  const db = getDb()
   const rows = await db
     .select({
       id: papers.id,
@@ -91,6 +92,7 @@ export async function listSavedPapers(
 }
 
 export async function countSavedPapers(): Promise<number> {
+  const db = getDb()
   const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(userSaves)
   return row?.count ?? 0
 }

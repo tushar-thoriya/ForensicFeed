@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { sql } from 'drizzle-orm'
-import { db } from '@/lib/db/client'
+import { getDb } from '@/lib/db/client'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -20,7 +20,7 @@ export async function GET(): Promise<NextResponse<HealthResponse>> {
   let latencyMs: number | null = null
 
   try {
-    await db.execute(sql`select 1`)
+    await getDb().execute(sql`select 1`)
     latencyMs = Date.now() - started
     dbOk = true
   } catch (error: unknown) {

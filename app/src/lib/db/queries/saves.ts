@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { db } from '@/lib/db/client'
+import { getDb } from '@/lib/db/client'
 import { readStatus, userSaves } from '@/lib/db/schema'
 
 // Both mutations are idempotent: setSaved(id, false) on a missing row is a
@@ -8,6 +8,7 @@ import { readStatus, userSaves } from '@/lib/db/schema'
 // state — the worst case is a redundant query that touches zero rows.
 
 export async function setSaved(paperId: string, saved: boolean): Promise<void> {
+  const db = getDb()
   if (saved) {
     // ON CONFLICT DO NOTHING: a second click while the first request is
     // still in flight should not throw. The row's saved_at stays at the
@@ -22,6 +23,7 @@ export async function setSaved(paperId: string, saved: boolean): Promise<void> {
 }
 
 export async function setReadStatus(paperId: string, isRead: boolean): Promise<void> {
+  const db = getDb()
   if (isRead) {
     // Upsert to 'read'. The enum has more values (reading/archived) but A6
     // only writes 'read'; existing rows in those states get promoted to

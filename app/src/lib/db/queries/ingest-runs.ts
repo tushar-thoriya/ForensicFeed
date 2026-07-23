@@ -1,11 +1,12 @@
 import { createId } from '@paralleldrive/cuid2'
 import { eq } from 'drizzle-orm'
-import { db } from '@/lib/db/client'
+import { getDb } from '@/lib/db/client'
 import { ingestRuns } from '@/lib/db/schema'
 import type { PaperSource } from '@/types/paper'
 
 export async function startRun(source: PaperSource): Promise<string> {
   const id = createId()
+  const db = getDb()
   await db.insert(ingestRuns).values({
     id,
     source,
@@ -26,6 +27,7 @@ export interface FinishRunInput {
 
 export async function finishRun(input: FinishRunInput): Promise<void> {
   const finishedAt = new Date()
+  const db = getDb()
   const [run] = await db
     .select({ startedAt: ingestRuns.startedAt })
     .from(ingestRuns)

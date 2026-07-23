@@ -62,11 +62,11 @@ vi.mock('@/lib/db/client', () => {
   // Drizzle's column comparators (eq) return SQL objects in production. We
   // substitute predicate factories so the in-memory store can evaluate them.
   return {
-    db: {
+    getDb: () => ({
       select: () => makeSelectBuilder(),
       insert: () => makeInsertBuilder(),
       update: () => makeUpdateBuilder(),
-    },
+    }),
     schema: {},
   }
 })
