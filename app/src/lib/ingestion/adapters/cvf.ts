@@ -7,6 +7,8 @@ import { sanitiseExternalUrl } from '@/lib/security/url'
 
 const CVF_BASE = 'https://openaccess.thecvf.com'
 const CVF_FETCH_TIMEOUT_MS = 30_000
+const CVF_MAX_ATTEMPTS = 3
+const CVF_RETRY_DELAY_MS = 500
 
 const DEFAULT_VENUES = ['CVPR2024', 'ICCV2023', 'WACV2024'] as const
 
@@ -144,7 +146,20 @@ function describeError(error: unknown): string {
   return parts.length > 0 ? parts.join(' <- ') : String(error)
 }
 
-async function fetchVenue(venueCode: string): Promise<NormalisedPaper[]> {
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// Transient = a network-level failure worth retrying: undici's "fetch failed"
+// wraps the real cause, and our own AbortController fires an AbortError. HTTP
+// status errors are deterministic, so retrying them is pointless.
+function isTransient(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  if (error.name === 'AbortError') return true
+  return error.cause != null
+}
+
+async function attemptVenueFetch(venueCode: string): Promise<NormalisedPaper[]> {
   const url = `${CVF_BASE}/${venueCode}?day=all`
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), CVF_FETCH_TIMEOUT_MS)
@@ -165,19 +180,38 @@ async function fetchVenue(venueCode: string): Promise<NormalisedPaper[]> {
     }
     const html = await response.text()
     return parseCvfHtml(html, venueCode)
-  } catch (error: unknown) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`CVF ${venueCode} timed out after ${CVF_FETCH_TIMEOUT_MS}ms`)
-    }
-    // Network-level failures ("fetch failed") hide the real reason in `.cause`;
-    // surface it. HTTP-status errors thrown above are already descriptive — pass through.
-    if (error instanceof Error && error.cause) {
-      throw new Error(`CVF ${venueCode} fetch error: ${describeError(error)}`)
-    }
-    throw error
   } finally {
     clearTimeout(timer)
   }
+}
+
+// CVF's large proceedings pages occasionally flake from serverless (transient
+// "fetch failed"). Retry transient failures a few times with a short linear
+// backoff before giving up; deterministic HTTP-status errors are thrown at once.
+async function fetchVenue(venueCode: string): Promise<NormalisedPaper[]> {
+  let lastError: unknown
+  for (let attempt = 1; attempt <= CVF_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return await attemptVenueFetch(venueCode)
+    } catch (error: unknown) {
+      lastError = error
+      if (!isTransient(error) || attempt === CVF_MAX_ATTEMPTS) break
+      await sleep(CVF_RETRY_DELAY_MS * attempt)
+    }
+  }
+
+  if (lastError instanceof Error && lastError.name === 'AbortError') {
+    throw new Error(
+      `CVF ${venueCode} timed out after ${CVF_FETCH_TIMEOUT_MS}ms (${CVF_MAX_ATTEMPTS} attempts)`,
+    )
+  }
+  // Network-level failures ("fetch failed") hide the real reason in `.cause`; surface it.
+  if (lastError instanceof Error && lastError.cause) {
+    throw new Error(
+      `CVF ${venueCode} fetch error after ${CVF_MAX_ATTEMPTS} attempts: ${describeError(lastError)}`,
+    )
+  }
+  throw lastError
 }
 
 export const cvfAdapter: Adapter = {

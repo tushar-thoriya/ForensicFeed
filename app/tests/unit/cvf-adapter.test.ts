@@ -163,4 +163,42 @@ describe('cvfAdapter.fetch', () => {
       }),
     ).rejects.toThrow(/CVF/i)
   })
+
+  it('retries a transient network failure, then succeeds', async () => {
+    const html = await loadFixture()
+    // undici surfaces network errors as TypeError('fetch failed') with the real
+    // reason on `.cause` — that's the transient signal we retry on.
+    const networkErr = Object.assign(new TypeError('fetch failed'), {
+      cause: Object.assign(new Error('connect ECONNRESET'), { code: 'ECONNRESET' }),
+    })
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockRejectedValueOnce(networkErr)
+      .mockResolvedValueOnce(new Response(html, { status: 200 }))
+
+    const papers = await cvfAdapter.fetch({
+      since: new Date('2020-01-01T00:00:00Z'),
+      now: new Date('2024-12-01T00:00:00Z'),
+      venues: ['CVPR2024'],
+    })
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2) // 1 transient fail + 1 retry success
+    expect(papers.length).toBeGreaterThan(0)
+  })
+
+  it('does not retry deterministic HTTP-status errors', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('missing', { status: 404 }))
+
+    await expect(
+      cvfAdapter.fetch({
+        since: new Date('2020-01-01T00:00:00Z'),
+        now: new Date('2024-12-01T00:00:00Z'),
+        venues: ['CVPR2024'],
+      }),
+    ).rejects.toThrow(/CVF/i)
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1) // no retry on a 404
+  })
 })
