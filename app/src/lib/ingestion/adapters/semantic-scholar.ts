@@ -16,6 +16,10 @@ const S2_FIELDS = [
   'citationCount',
 ].join(',')
 const S2_FETCH_TIMEOUT_MS = 30_000
+// S2's approved-key rate limit is 1 req/sec cumulative across all endpoints,
+// same ceiling as unauthenticated. Space every request just over 1s so the
+// sweep stays below the threshold and avoids 429 rejections either way.
+const S2_THROTTLE_MS = 1100
 
 const QUERIES = [
   'image forgery detection',
@@ -165,13 +169,17 @@ function sleep(ms: number): Promise<void> {
 
 export const semanticScholarAdapter: Adapter = {
   source: 'semantic_scholar',
-  async fetch({ since, apiKey: providedKey }: AdapterFetchOptions): Promise<NormalisedPaper[]> {
+  async fetch({
+    since,
+    apiKey: providedKey,
+    throttleMs: providedThrottleMs,
+  }: AdapterFetchOptions): Promise<NormalisedPaper[]> {
     // Treat `apiKey: null` as an explicit "no key" signal (so callers can
     // disable env lookup, e.g. in tests). Only fall through to env when the
     // caller didn't pass `apiKey` at all.
     const apiKey =
       providedKey !== undefined ? providedKey : (getEnv().SEMANTIC_SCHOLAR_API_KEY ?? null)
-    const throttleMs = apiKey ? 0 : 1100
+    const throttleMs = providedThrottleMs ?? S2_THROTTLE_MS
 
     const seen = new Map<string, NormalisedPaper>()
     let lastError: Error | null = null

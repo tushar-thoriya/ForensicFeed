@@ -9,6 +9,10 @@ export interface AdapterFetchOptions {
   // OpenReview uses group paths like 'ICLR.cc/2025/Conference'. Adapters
   // that don't recognise the field ignore it.
   venues?: string[]
+  // Delay between successive upstream requests, ms. Adapters that page or
+  // sweep multiple queries honour this to stay under source rate limits;
+  // primarily an override hook for tests. Adapters that don't page ignore it.
+  throttleMs?: number
 }
 
 export interface Adapter {
