@@ -80,6 +80,7 @@ describe('semanticScholarAdapter.fetch', () => {
       since: new Date('2026-01-01T00:00:00Z'),
       now: new Date('2026-04-25T10:00:00Z'),
       apiKey: 'test-key-abc',
+      throttleMs: 0,
     })
 
     const headers = (fetchSpy.mock.calls[0]?.[1]?.headers ?? {}) as Record<string, string>
@@ -96,6 +97,7 @@ describe('semanticScholarAdapter.fetch', () => {
       since: new Date('2026-01-01T00:00:00Z'),
       now: new Date('2026-04-25T10:00:00Z'),
       apiKey: null,
+      throttleMs: 0,
     })
 
     const headers = (fetchSpy.mock.calls[0]?.[1]?.headers ?? {}) as Record<string, string>
@@ -112,6 +114,7 @@ describe('semanticScholarAdapter.fetch', () => {
       since: new Date('2026-04-01T00:00:00Z'),
       now: new Date('2026-04-25T10:00:00Z'),
       apiKey: 'test-key',
+      throttleMs: 0,
     })
 
     // 2018 fixture entry filtered out by since.
@@ -131,6 +134,7 @@ describe('semanticScholarAdapter.fetch', () => {
         since: new Date('2026-01-01T00:00:00Z'),
         now: new Date('2026-04-25T10:00:00Z'),
         apiKey: 'test-key',
+        throttleMs: 0,
       }),
     ).rejects.toThrow(/Semantic Scholar/i)
   })
