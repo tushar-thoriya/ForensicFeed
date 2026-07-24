@@ -33,6 +33,7 @@
 // =============================================================================
 
 // Reusable presets — add more as needed, then reference them in SCHEDULES below.
+// These all times are in "UTC" not "IST"(indian standard time)
 const PRESETS = {
   DAILY_6AM: '0 6 * * *',
   DAILY_6_15AM: '15 6 * * *',
@@ -40,7 +41,7 @@ const PRESETS = {
   WEEKLY_MONDAY_6AM: '0 6 * * 1',
   WEEKLY_MONDAY_7AM: '0 7 * * 1',
   WEEKLY_MONDAY_7_30AM: '30 7 * * 1',
-  WEEKLY_MONDAY_8AM: '0 8 * * 1',
+  WEEKLY_MONDAY_2_30AM: '30 2 * * 1',
   WEEKLY_SUNDAY_6AM: '0 6 * * 0',
   MONTHLY_FIRST_6AM: '0 6 1 * *',
 } as const
@@ -69,7 +70,7 @@ export const SCHEDULES = {
   greatzh: PRESETS.WEEKLY_MONDAY_6AM,
 
   // Weekly email digest (B2) — Monday morning, after the weekend's papers land
-  digest: PRESETS.WEEKLY_MONDAY_8AM,
+  digest: PRESETS.WEEKLY_MONDAY_2_30AM,
 } as const
 
 export type ScheduleKey = keyof typeof SCHEDULES
