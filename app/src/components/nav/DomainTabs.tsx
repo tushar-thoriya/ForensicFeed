@@ -1,4 +1,6 @@
-import Link from 'next/link'
+'use client'
+
+import Link, { useLinkStatus } from 'next/link'
 import { serialiseFilters } from '@/lib/filters/parse'
 import type { FilterState } from '@/types/filter'
 import type { PaperDomain } from '@/types/paper'
@@ -21,6 +23,15 @@ function hrefForDomain(filters: FilterState, domain: PaperDomain): string {
   return qs ? `/?${qs}` : '/'
 }
 
+// Rendered inside each <Link>; useLinkStatus reports the pending state of its
+// nearest ancestor Link so the exact tab being navigated to shows a spinner
+// immediately on click — instant feedback while the feed streams in behind it.
+function TabPendingIndicator() {
+  const { pending } = useLinkStatus()
+  if (!pending) return null
+  return <span className="domain-tab-spinner" aria-hidden="true" />
+}
+
 // URL-driven tabs: each is a real navigation to a query-param variant of the
 // same route, so aria-current="page" (not role="tab"/aria-selected, which
 // would imply in-page JS panel switching) is the correct semantic.
@@ -37,6 +48,7 @@ export function DomainTabs({ filters }: DomainTabsProps) {
             aria-current={active ? 'page' : undefined}
           >
             {tab.label}
+            <TabPendingIndicator />
           </Link>
         )
       })}

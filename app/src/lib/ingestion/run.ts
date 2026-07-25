@@ -1,5 +1,7 @@
+import { revalidateTag } from 'next/cache'
 import { upsertPaper } from '@/lib/db/queries/papers'
 import { finishRun, startRun } from '@/lib/db/queries/ingest-runs'
+import { FEED_CACHE_TAG } from '@/lib/db/queries/feed-cache'
 import type { Adapter, RunResult } from '@/lib/ingestion/types'
 
 export interface RunAdapterOptions {
@@ -55,6 +57,16 @@ export async function runAdapter(adapter: Adapter, options: RunAdapterOptions): 
     papersUpdated,
     errorMessage,
   })
+
+  // Surface freshly ingested/updated papers in the feed without waiting for the
+  // cache TTL. Never let a revalidation hiccup fail an otherwise-good run.
+  if (papersInserted > 0 || papersUpdated > 0) {
+    try {
+      revalidateTag(FEED_CACHE_TAG)
+    } catch (error) {
+      console.error('[runAdapter] feed cache revalidation failed', error)
+    }
+  }
 
   return {
     source: adapter.source,

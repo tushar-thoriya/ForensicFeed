@@ -1,0 +1,90 @@
+.paper-skeleton {
+  padding: var(--space-lg) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.skeleton-line,
+.skeleton-chip {
+  background: var(--color-surface-raised, oklch(94% 0 0deg));
+  border-radius: 4px;
+}
+
+.skeleton-line {
+  height: 0.85rem;
+  margin-bottom: var(--space-sm);
+}
+
+.skeleton-meta {
+  width: 30%;
+  height: 0.7rem;
+  margin-bottom: var(--space-md);
+}
+
+.skeleton-title {
+  height: 1.6rem;
+  width: 90%;
+}
+
+.skeleton-title.short {
+  width: 55%;
+  margin-bottom: var(--space-md);
+}
+
+.skeleton-text {
+  width: 100%;
+}
+
+.skeleton-text.short {
+  width: 70%;
+}
+
+.skeleton-tags {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.skeleton-chip {
+  width: 3.5rem;
+  height: 1.25rem;
+}
+
+.skeleton-group {
+  margin-bottom: var(--space-lg);
+}
+
+.skeleton-sidebar-title {
+  width: 45%;
+  height: 1.1rem;
+  margin-bottom: var(--space-lg);
+}
+
+.skeleton-sidebar-label {
+  width: 35%;
+  height: 0.7rem;
+  margin-bottom: var(--space-md);
+}
+
+.skeleton-sidebar-option {
+  width: 70%;
+}
+
+/* Compositor-friendly opacity pulse only; disabled under reduced-motion so the
+   placeholders sit still. */
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton-line,
+  .skeleton-chip {
+    animation: skeleton-pulse 1.4s var(--ease-out-expo, ease-in-out) infinite;
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}

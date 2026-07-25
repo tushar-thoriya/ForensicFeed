@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
 import { setSaved } from '@/lib/db/queries/saves'
+import { FEED_CACHE_TAG } from '@/lib/db/queries/feed-cache'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -27,6 +29,15 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   try {
     await setSaved(parsed.paperId, parsed.saved)
+    // Bust the feed data cache so the saved badge is correct on the next feed
+    // render (e.g. after the client's router.refresh() or a later tab switch).
+    // Best-effort: the write already succeeded, so a revalidation hiccup must
+    // not turn a good mutation into a 500 (worst case the cache TTL catches up).
+    try {
+      revalidateTag(FEED_CACHE_TAG)
+    } catch (error: unknown) {
+      console.error('[POST /api/saves] cache revalidation failed', error)
+    }
     return NextResponse.json({ ok: true }, { status: 200 })
   } catch (error: unknown) {
     console.error('[POST /api/saves] mutation failed', error)
