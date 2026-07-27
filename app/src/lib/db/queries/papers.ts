@@ -14,6 +14,7 @@ import { classifyDomain } from '@/lib/ingestion/domain'
 import { EMPTY_FILTERS, type FilterState } from '@/types/filter'
 import { SOURCE_VALUES, VENUE_TYPE_VALUES } from '@/lib/filters/labels'
 import {
+  abstractSnippetExpr,
   buildConditions,
   buildOrderBy,
   DEFAULT_FEED_LIMIT,
@@ -185,7 +186,9 @@ export async function listRecentPapers(options: ListOptions = {}): Promise<Paper
       id: papers.id,
       title: papers.title,
       authors: papers.authors,
-      abstract: papers.abstract,
+      // Snippet, not the full column — the card clamps to 3 lines. See
+      // abstractSnippetExpr. getPaperById still selects the whole abstract.
+      abstract: abstractSnippetExpr(),
       arxivId: papers.arxivId,
       doi: papers.doi,
       titleHash: papers.titleHash,
