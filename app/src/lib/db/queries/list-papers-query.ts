@@ -53,6 +53,29 @@ function tsRankExpr(query: string): SQL {
   return sql`ts_rank_cd(search_vector, websearch_to_tsquery('english', ${query}))`
 }
 
+// The feed card clamps .paper-card-abstract to 3 lines (-webkit-line-clamp,
+// feed.css) — roughly 300 chars at --content-max: 860px. Abstracts average
+// ~1500 chars, so the full column sent ~80% of its bytes straight into
+// overflow:hidden, and twice over: SSR HTML plus the RSC flight copy React
+// needs to hydrate. Trimming in Postgres keeps both copies small. The detail
+// page (getPaperById) still selects the full column.
+export const FEED_ABSTRACT_SNIPPET_CHARS = 400
+
+export function abstractSnippetExpr(
+  maxChars: number = FEED_ABSTRACT_SNIPPET_CHARS,
+): SQL<string | null> {
+  // The `\\s` / `\\S` escapes are load-bearing: `\s` inside a JS template
+  // literal collapses to a bare `s`, which would match the letter rather than
+  // whitespace and cut the snippet mid-word. regexp_replace drops the trailing
+  // partial word left by `left()`; the ellipsis marks the cut, since CSS only
+  // adds one of its own when the text still overflows three lines.
+  return sql<string | null>`case
+    when ${papers.abstract} is null then null
+    when length(${papers.abstract}) <= ${maxChars} then ${papers.abstract}
+    else regexp_replace(left(${papers.abstract}, ${maxChars}), '\\s+\\S*$', '') || '…'
+  end`
+}
+
 export function buildConditions(input: BuildListPapersInput): SQL[] {
   const { filters, minRelevance, since, ignoreDomain } = input
   const conditions: SQL[] = [gte(papers.relevanceScore, minRelevance)]

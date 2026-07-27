@@ -4,6 +4,7 @@ import { papers, readStatus, userSaves } from '@/lib/db/schema'
 import type { PaperWithUserState } from '@/types/paper'
 import { EMPTY_FILTERS, type FilterState } from '@/types/filter'
 import {
+  abstractSnippetExpr,
   buildConditions,
   buildOrderBy,
   DEFAULT_FEED_LIMIT,
@@ -56,7 +57,8 @@ export async function listSavedPapers(
       id: papers.id,
       title: papers.title,
       authors: papers.authors,
-      abstract: papers.abstract,
+      // Snippet — the saved view renders the same 3-line-clamped PaperCard.
+      abstract: abstractSnippetExpr(),
       arxivId: papers.arxivId,
       doi: papers.doi,
       titleHash: papers.titleHash,
