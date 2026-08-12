@@ -7,6 +7,7 @@ import { cvfFunctions } from '@/lib/inngest/ingest-cvf'
 import { openReviewFunctions } from '@/lib/inngest/ingest-openreview'
 import { greatzhFunctions } from '@/lib/inngest/ingest-greatzh'
 import { digestFunctions } from '@/lib/inngest/weekly-digest'
+import { refreshCitationsFunctions } from '@/lib/inngest/refresh-citations'
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -18,5 +19,6 @@ export const { GET, POST, PUT } = serve({
     ...openReviewFunctions,
     ...greatzhFunctions,
     ...digestFunctions,
+    ...refreshCitationsFunctions,
   ],
 })
