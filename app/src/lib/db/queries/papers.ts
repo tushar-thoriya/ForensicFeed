@@ -1,4 +1,4 @@
-import { and, eq, sql, type SQL } from 'drizzle-orm'
+import { and, eq, isNull, sql, type SQL } from 'drizzle-orm'
 import { getDb } from '@/lib/db/client'
 import { papers, readStatus, userSaves, type NewPaper } from '@/lib/db/schema'
 import type {
@@ -123,6 +123,28 @@ export async function upsertPaper(input: NormalisedPaper): Promise<UpsertResult>
     domain,
   })
   return { inserted: true, paperId: id }
+}
+
+export interface CitationBackfillRow {
+  id: string
+  arxivId: string | null
+  doi: string | null
+}
+
+// Rows whose citation_count was never populated — every adapter except
+// Semantic Scholar leaves it null, so this is the backfill work queue.
+export async function findPapersMissingCitations(limit: number): Promise<CitationBackfillRow[]> {
+  const db = getDb()
+  return db
+    .select({ id: papers.id, arxivId: papers.arxivId, doi: papers.doi })
+    .from(papers)
+    .where(isNull(papers.citationCount))
+    .limit(limit)
+}
+
+export async function setCitationCount(paperId: string, citationCount: number): Promise<void> {
+  const db = getDb()
+  await db.update(papers).set({ citationCount }).where(eq(papers.id, paperId))
 }
 
 export interface ListOptions {

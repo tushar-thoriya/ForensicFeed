@@ -1,0 +1,67 @@
+{
+  "total": 4,
+  "token": null,
+  "data": [
+    {
+      "paperId": "abc123def456",
+      "externalIds": {
+        "ArXiv": "2608.08009",
+        "DOI": "10.1109/FAKE.2026.01234",
+        "DBLP": "journals/x/Author2026"
+      },
+      "title": "Localizing Copy-Move Forgery in Passport Document Images",
+      "abstract": "We propose a transformer-based pipeline for copy-move forgery localization in scanned passport photographs. Code is available at https://github.com/lab-org/passport-forgery.",
+      "year": 2026,
+      "publicationDate": "2026-08-08",
+      "venue": "IEEE Transactions on Information Forensics and Security",
+      "publicationTypes": ["JournalArticle"],
+      "authors": [
+        { "authorId": "1", "name": "Alice Example" },
+        { "authorId": "2", "name": "Bob Sample" }
+      ],
+      "citationCount": 7,
+      "openAccessPdf": { "url": "https://arxiv.org/pdf/2608.08009.pdf" }
+    },
+    {
+      "paperId": "def456ghi789",
+      "externalIds": {
+        "DOI": "10.1145/MM.2026.05678"
+      },
+      "title": "Neuro-Forensics: An Explainable ResNet-KAN Framework",
+      "abstract": "A ResNet-KAN detector for image splicing artifacts in identity documents.",
+      "year": 2026,
+      "publicationDate": "2026-08-06",
+      "venue": "Proceedings of the ACM International Conference on Multimedia",
+      "publicationTypes": ["Conference"],
+      "authors": [{ "authorId": "3", "name": "Carol Author" }],
+      "citationCount": 0,
+      "openAccessPdf": { "url": "https://dl.acm.org/doi/pdf/10.1145/MM.2026.05678" }
+    },
+    {
+      "paperId": "ghi789jkl012",
+      "externalIds": { "DOI": "10.1016/j.imavis.2026.99999" },
+      "title": "Wavelet-based features for cross-forgery generalization",
+      "abstract": null,
+      "year": 2026,
+      "publicationDate": "2026-08-05",
+      "venue": "",
+      "publicationTypes": null,
+      "authors": [{ "authorId": "4", "name": "Dan Reviewer" }],
+      "citationCount": 2,
+      "openAccessPdf": null
+    },
+    {
+      "paperId": "jkl012mno345",
+      "externalIds": { "DOI": "10.9999/evil.2026" },
+      "title": "Hostile Metadata Paper",
+      "abstract": "An entry whose upstream PDF url carries an executable scheme.",
+      "year": 2026,
+      "publicationDate": "2026-08-04",
+      "venue": "Untrusted Venue",
+      "publicationTypes": ["JournalArticle"],
+      "authors": [],
+      "citationCount": null,
+      "openAccessPdf": { "url": "javascript:alert(1)" }
+    }
+  ]
+}

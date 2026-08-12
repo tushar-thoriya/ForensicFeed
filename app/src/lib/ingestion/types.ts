@@ -13,6 +13,9 @@ export interface AdapterFetchOptions {
   // sweep multiple queries honour this to stay under source rate limits;
   // primarily an override hook for tests. Adapters that don't page ignore it.
   throttleMs?: number
+  // Keyword queries for search-driven adapters (Semantic Scholar). Adapters
+  // with a fixed source listing ignore it.
+  queries?: string[]
 }
 
 export interface Adapter {
