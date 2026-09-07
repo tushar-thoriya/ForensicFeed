@@ -5,6 +5,8 @@
 
 Built so I never miss a paper that matters for OVD (Optically Variable Device) document forensics research.
 
+**▶ Live app: <https://forensic-feed.vercel.app>**
+
 ---
 
 ## What it does
