@@ -2,6 +2,7 @@ import { revalidateTag } from 'next/cache'
 import { upsertPaper } from '@/lib/db/queries/papers'
 import { finishRun, startRun } from '@/lib/db/queries/ingest-runs'
 import { FEED_CACHE_TAG } from '@/lib/db/queries/feed-cache'
+import { partitionStorablePapers } from '@/lib/ingestion/guards'
 import type { Adapter, RunResult } from '@/lib/ingestion/types'
 
 export interface RunAdapterOptions {
@@ -32,7 +33,20 @@ export async function runAdapter(adapter: Adapter, options: RunAdapterOptions): 
     const results = await adapter.fetch(fetchOptions)
     papersFetched = results.length
 
-    for (const paper of results) {
+    // Storage invariants apply to every adapter, not just the one that
+    // surfaced the problem: nothing without a free, directly-readable PDF and
+    // nothing dated in the future may reach the papers table. See guards.ts.
+    const { accepted, rejected } = partitionStorablePapers(results, now)
+    const reasons = Object.entries(rejected).filter(([, count]) => count > 0)
+    if (reasons.length > 0) {
+      const skipped = reasons.reduce((sum, [, count]) => sum + count, 0)
+      const detail = reasons.map(([reason, count]) => `${reason}=${count}`).join(', ')
+      console.warn(
+        `[runAdapter] ${adapter.source}: skipped ${skipped}/${papersFetched} papers (${detail})`,
+      )
+    }
+
+    for (const paper of accepted) {
       try {
         const { inserted } = await upsertPaper(paper)
         if (inserted) papersInserted += 1
