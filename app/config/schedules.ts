@@ -55,10 +55,6 @@ export const SCHEDULES = {
   // Hugging Face Papers — curated daily list
   huggingface: PRESETS.DAILY_6_15AM,
 
-  // Semantic Scholar — date-windowed bulk search for new papers, including
-  // the DOI-only journal work that never reaches arXiv
-  semanticScholar: PRESETS.DAILY_6_30AM,
-
   // Citation-count backfill — Semantic Scholar is the only source that reports
   // citations, so every other adapter's rows need filling in afterwards.
   // Weekly is plenty: counts move slowly and the whole corpus is a few requests.
